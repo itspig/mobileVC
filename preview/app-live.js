@@ -1,0 +1,3570 @@
+/* MobileVC live — real DSH data, read-only shell */
+(() => {
+  'use strict';
+
+  const $ = (s, r = document) => r.querySelector(s);
+  const esc = (v) =>
+    String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  const I = {
+    outline: '<path d="M4 6h16M4 12h10M4 18h14"/>',
+    down: '<path d="m6 9 6 6 6-6"/>',
+    device: '<rect x="5" y="2" width="14" height="20" rx="3"/><line x1="10" y1="18" x2="14" y2="18"/>',
+    camera: '<path d="M14.5 4h-5L7.5 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3.5L14.5 4z"/><circle cx="12" cy="13" r="4"/>',
+    folder: '<path d="M3.5 6.8a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v8.4a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2V6.8Z"/>',
+    refresh: '<path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/>',
+    dashboard: '<rect x="3.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="3.5" width="7" height="4.6" rx="1.4"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="10.5" width="7" height="10" rx="1.6"/>',
+    moon: '<path d="M20 14.6A8.6 8.6 0 0 1 9.4 4a7.1 7.1 0 1 0 10.6 10.6Z"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/>',
+    gear: '<circle cx="12" cy="12" r="3.1"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 8.9 19.3a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.7 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.7 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.7a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.3 9v.09a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1Z"/>',
+    cut: '<circle cx="6.5" cy="7" r="2.5"/><circle cx="6.5" cy="17" r="2.5"/><path d="M8.7 8.3 20 18M8.7 15.7 20 6"/>',
+    history: '<path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3.5 4.5V9H8"/><path d="M12 7.5V12l3 2"/>',
+    server: '<rect x="3.5" y="4" width="17" height="6.5" rx="2"/><rect x="3.5" y="13.5" width="17" height="6.5" rx="2"/><path d="M7 7.2h.01M7 16.7h.01"/>',
+    terminal: '<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M7 9l3 3-3 3M13 15h4"/>',
+    puzzle: '<path d="M10 3.5a1.7 1.7 0 0 1 3.4 0V5h2.1a1.5 1.5 0 0 1 1.5 1.5v2.1h1.5a1.7 1.7 0 0 1 0 3.4H17v2.5a1.5 1.5 0 0 1-1.5 1.5h-2.1v1.5a1.7 1.7 0 0 1-3.4 0V16H7.9a1.5 1.5 0 0 1-1.5-1.5V12H5a1.7 1.7 0 0 1 0-3.4h1.4V6.5A1.5 1.5 0 0 1 7.9 5H10V3.5Z"/>',
+    brain: '<path d="M9.5 4.2A3 3 0 0 0 6.2 7a3 3 0 0 0-1 5.6A3 3 0 0 0 8 17.5h1.5V4.2Z"/><path d="M14.5 4.2A3 3 0 0 1 17.8 7a3 3 0 0 1 1 5.6 3 3 0 0 1-2.8 4.9h-1.5V4.2Z"/><path d="M12 4v16"/>',
+    shield: '<path d="M12 3l7 2.8v5.2c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V5.8L12 3Z"/><path d="M9 12l2 2 4-4"/>',
+    cpu: '<rect x="7" y="7" width="10" height="10" rx="2"/><path d="M10 3v3M14 3v3M10 18v3M14 18v3M3 10h3M3 14h3M18 10h3M18 14h3"/>',
+    image: '<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.5"/><path d="M4.5 17l5-4.5 3.5 3 3-2.5 3.5 4"/>',
+    up: '<path d="M12 19V5"/><path d="M6 11l6-6 6 6"/>',
+    x: '<path d="M6 6l12 12M18 6L6 18"/>',
+    check: '<path d="M4.5 12.5l5 5 10-11"/>',
+    file: '<path d="M6 3h7l5 5v13H6V3Z"/><path d="M13 3v5h5"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    chat: '<path d="M21 11.5a8.4 8.4 0 0 1-9 8.5 9.4 9.4 0 0 1-3.2-.6L3 21l1.6-4.5A8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5Z"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 10.5v6M12 7.5h.01"/>',
+    wallet: '<rect x="3.5" y="6" width="17" height="13" rx="2.5"/><path d="M3.5 9.5h17M16 14.5h1.5"/>',
+    gift: '<rect x="3.5" y="8" width="17" height="4" rx="1"/><path d="M5.5 12v8h13v-8M12 8v12M12 8c-1.8 0-3.5-1.1-3.5-2.8S10.2 3 12 8ZM12 8c1.8 0 3.5-1.1 3.5-2.8S13.8 3 12 8Z"/>',
+    bell: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/>',
+    lock: '<rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/>',
+    play: '<path d="M8 5.5v13l11-6.5-11-6.5Z" fill="currentColor" stroke="none"/>',
+    stop: '<rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor" stroke="none"/>',
+    chevron: '<path d="M8 10l4 4 4-4"/>',
+  };
+  const icon = (n, cls = '') =>
+    `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n] || ''}</svg>`;
+
+  const API = 'api';
+  const LAST_SESSION_KEY = 'mobilevc.lastSession';
+  const INTERACTIVE = /^\/mobilevc(?:\/|$)/.test(location.pathname) && !location.pathname.startsWith('/mobilevc-preview');
+  const state = {
+    provisional: false,
+    blockKeys: null,
+    turns: [],
+    sessionsQuery: '',
+    sessionsOffset: 0,
+    sessionsHasMore: true,
+    sessionsTotal: 0,
+    sessionsLoading: false,
+    themeMode: (() => { try { return localStorage.getItem('mobilevc.themeMode') || 'auto'; } catch (_) { return 'auto'; } })(),
+    theme: document.documentElement.dataset.theme || 'light',
+    traceMode: (() => { try { return localStorage.getItem('mobilevc.traceMode') || 'simple' } catch (_) { return 'simple' } })(),
+    sessions: [],
+    session: null,
+    blocks: [],
+    approvals: [],
+    questions: [],
+    questionSig: '',
+    skills: [],
+    memories: [],
+    logs: null,
+    files: [],
+    cwd: '',
+    filePath: '',
+    fileParent: '',
+    fileLoading: false,
+    fileSeq: 0,
+    attachments: [],
+    optimisticUser: null,
+    queue: [],
+    queueSeq: 0,
+    interjections: [],
+    jobs: [],
+    jobsSeq: 0,
+    account: { available: false, status: 'unknown', links: { topUpUrl: 'https://platform.deepseek.com/top_up', usageUrl: 'https://platform.deepseek.com/usage' }, balance: null },
+    accountBusy: false,
+    accountLoading: true,
+    accountRetry: null,
+    quotaRedirected: false,
+    reconcileTimer: null,
+    memoryDefaultPath: '',
+    engine: 'DSH',
+    model: '',
+    loading: true,
+    detailLoading: false,
+    error: '',
+    toastTimer: null,
+    draft: '',
+    sending: false,
+    sendStartedAt: 0,
+    pollTimer: null,
+    pollIdle: 0,
+    contentSig: '',
+    follow: null,
+    followRetry: null,
+    lastFollowAt: 0,
+    lastSyncAt: 0,
+    syncBusy: false,
+    resumeInFlight: false,
+    live: null,
+    liveRaf: null,
+    liveOpen: true,
+  };
+
+  async function api(path, opts = {}) {
+    const r = await fetch(`${API}/${path}`, {
+      headers: { Accept: 'application/json', ...(opts.headers || {}) },
+      cache: 'no-store',
+      ...opts,
+    });
+    if (!r.ok) {
+      let message = `${r.status} ${r.statusText}`;
+      try {
+        const body = await r.json();
+        if (body?.error) message = body.error;
+      } catch (_) {}
+      throw new Error(message);
+    }
+    return r.json();
+  }
+
+  const status = () => {
+    if (state.loading) return { label: 'DSH · 读取中', dot: 'busy' };
+    if (!state.session) return { label: 'Shell · 未连接', dot: '' };
+    if (state.sending) return { label: 'DSH · 发送中', dot: 'busy' };
+    if (state.questions.length) return { label: 'DSH · 等你回答', dot: 'busy' };
+    // 兜底：SSE 偶尔不重放 turn/start（例如中途才连上手机端），但流里已有
+    // 思考/正文在输出，此时会话必然在跑，灯不能仍是绿色空闲。
+    if (state.live && (state.live.reasoning || state.live.text)) return { label: 'DSH · 输出中', dot: 'busy' };
+    const s = state.session;
+    if (s.state === 'running') return { label: `DSH · 运行中`, dot: 'busy' };
+    if (s.state === 'waiting') return { label: `DSH · 待授权`, dot: 'busy' };
+    if (s.state === 'error') return { label: `DSH · 失败`, dot: 'err' };
+    return { label: `DSH · 空闲`, dot: 'on' };
+  };
+
+  /* ---------- data ---------- */
+  async function loadSessions() {
+    state.loading = true;
+    state.error = '';
+    render();
+    try {
+      const data = await api('sessions?limit=12');
+      state.sessions = data.sessions || [];
+      const hashId = (location.hash.match(/^#\/chat\/(.+)$/) || [])[1] || '';
+      let savedId = '';
+      try { savedId = localStorage.getItem(LAST_SESSION_KEY) || ''; } catch (_) {}
+      const running = state.sessions.find((s) => !s.subagent && s.state === 'running');
+      const preferred = state.sessions.find((s) => !s.subagent && s.state !== 'running' && s.assistantCount > 0);
+      const target = state.sessions.find((s) => s.id === hashId)
+        || state.sessions.find((s) => s.id === savedId)
+        || running
+        || preferred
+        || state.sessions[0];
+      if (target) {
+        await selectSession(target.id, { keepLoading: true });
+      } else {
+        state.loading = false;
+        state.session = null;
+        render();
+      }
+    } catch (e) {
+      state.loading = false;
+      state.error = `读取 DSH 会话失败：${e.message}`;
+      render();
+    }
+  }
+
+  async function selectSession(id, opts = {}) {
+    if (!id) return;
+    state.provisional = false;
+    state.interjections = [];
+    stopPolling();
+    stopFollow();
+    state.draft = '';
+    state.sending = false;
+    state.contentSig = '';
+    state.live = null;
+    clearAttachments();
+    state.session = null;
+    state.blocks = [];
+    state.approvals = [];
+    state.questions = [];
+    state.questionSig = '';
+    state.optimisticUser = null;
+    state.detailLoading = true;
+    state.error = '';
+    if (!opts.keepLoading) state.loading = false;
+    render();
+    try {
+      const data = await api(`sessions/${encodeURIComponent(id)}`);
+      state.session = data;
+      state.blocks = data.blocks || [];
+      rebuildBlockKeys();
+      state.approvals = data.approvals || [];
+      state.engine = data.engine || 'DSH';
+      state.model = data.model || '';
+      state.cwd = data.cwd || '';
+      state.loading = false;
+      state.detailLoading = false;
+      state.contentSig = contentSignature(data);
+      history.replaceState(null, '', `#/chat/${id}`);
+      try { localStorage.setItem(LAST_SESSION_KEY, id); } catch (_) {}
+      render();
+      requestAnimationFrame(scrollContentBottom);
+      if (INTERACTIVE) {
+        pingPresence();
+        refreshQueue();
+        refreshJobs();
+        startFollow();
+      } else if (data.state === 'running') startPolling();
+    } catch (e) {
+      stopPolling();
+      stopFollow();
+      state.loading = false;
+      state.detailLoading = false;
+      state.error = `读取会话失败：${e.message}`;
+      render();
+    }
+  }
+
+  function blockKey(b) {
+    if (!b) return '';
+    if (b.type === 'user') {
+      const extra = (b.images?.length || b.files?.length)
+        ? `:${(b.images || []).map((i) => i.name || i.attachmentId || '').join(',')}:${(b.files || []).map((f) => f.name || f.attachmentId || '').join(',')}`
+        : '';
+      return `u:${String(b.text || '').slice(0, 240)}${extra}`;
+    }
+    if (b.type === 'assistant') return `a:${String(b.html || b.text || '').slice(0, 240)}`;
+    if (b.type === 'thinking') return `t:${String(b.html || b.text || '').slice(0, 240)}`;
+    if (b.type === 'tool') return `tool:${String(b._callId || b.callId || '')}:${String(b.name || '')}:${String(b.arg || '').slice(0, 120)}`;
+    return `${b.type || 'x'}:${String(b.text || b.body || b.html || '').slice(0, 160)}`;
+  }
+  function rebuildBlockKeys() {
+    state.blockKeys = new Set((state.blocks || []).map(blockKey));
+    if (!state.blockKeys.has('')) state.blockKeys.delete('');
+  }
+
+  function applyDetail(data, opts = {}) {
+    state.session = data;
+    const incoming = data.blocks || [];
+    const prevCount = state.blocks.length;
+    const hadBlocks = prevCount > 0;
+    // 权威全量刷新（下拉刷新 / 手动刷新 / 会话切换）永远以服务端为准。
+    // 其余情况：只有「块数不少于本地」才接受；SSE 重连推送的 1~2 轮微型快照
+    // 一律整块丢弃，绝不能把旧轮次当作新块 append 到时间线末尾
+    // （否则 DOM 无限变长、滑不到底、旧内容乱入、滚动位置错乱成空白屏）。
+    if (opts.force || !state.blocks.length || incoming.length >= state.blocks.length) {
+      state.blocks = incoming;
+    }
+    // else: 本地全量历史保持不动，新消息只由 durable patch (applyPatch) 追加。
+    if (state.optimisticUser) {
+      const opt = state.optimisticUser;
+      const visible = state.blocks.some((b) => b !== opt.block && b.type === 'user' && (b.text === opt.text || (opt.block?.images?.length && b.images?.length)));
+      if (visible) {
+        state.optimisticUser = null;
+        try {
+          const selector = `[data-optimistic="${CSS.escape(opt.rpcId)}"]`;
+          document.querySelector(selector)?.remove();
+        } catch (_) {}
+      } else if (!opt.busy && opt.block && !state.blocks.includes(opt.block)) {
+        state.blocks.push(opt.block);
+      }
+    }
+    if (opts.force || !hadBlocks || incoming.length >= prevCount) {
+      state.approvals = data.approvals || [];
+    }
+    state.engine = data.engine || state.engine;
+    state.model = data.model || state.model;
+    state.cwd = data.cwd || state.cwd;
+    rebuildBlockKeys();
+    return Boolean(opts.force || !hadBlocks || incoming.length >= prevCount);
+  }
+
+  function contentSignature(data) {
+    const blocks = data.blocks || [];
+    const shape = blocks.map((b) => `${b.type || ''}:${b.status || ''}:${(b.body || b.html || b.text || '').length}`).join(',');
+    return `${data.state || ''}|${blocks.length}|${shape}|${data.pending || 0}`;
+  }
+
+  function durationLabel(ms) {
+    const n = Number(ms)
+    if (!n || n < 0) return ''
+    if (n < 1000) return `${Math.round(n)}ms`
+    // Work in rounded total seconds so 59_999ms and 119_999ms don't render as
+    // the invalid "60s" / "1m 60s".
+    const totalSec = Math.round(n / 1000)
+    if (totalSec < 60) return `${totalSec}s`
+    return `${Math.floor(totalSec / 60)}m ${totalSec % 60}s`
+  }
+
+  function isNearBottom(el, threshold = 90) {
+    return !el || el.scrollHeight - el.scrollTop - el.clientHeight <= threshold;
+  }
+
+  function scrollContentBottom() {
+    const el = $('#content');
+    if (el) el.scrollTop = el.scrollHeight;
+  }
+
+  function renderContentPreservingOpen() {
+    const el = $('#content');
+    if (!el) return;
+    const atBottom = isNearBottom(el, 80);
+    const oldTop = el.scrollTop;
+    const open = [...document.querySelectorAll('.thinking')].map((node) => node.open);
+    renderContent();
+    [...document.querySelectorAll('.thinking')].forEach((node, index) => {
+      if (open[index]) node.open = true;
+    });
+    if (atBottom) {
+      scrollContentBottom();
+    } else {
+      el.scrollTop = oldTop;
+    }
+  }
+
+  function stopPolling() {
+    if (state.pollTimer) clearInterval(state.pollTimer);
+    state.pollTimer = null;
+    state.pollIdle = 0;
+  }
+
+  // 顶栏状态灯是「会话状态」的唯一可视化出口。SSE 增量（durable / snapshot /
+  // assistant-stream）不会走 render()，而 updateDockStatus() 又因底栏改成
+  // unified-bar 后没有 .dock-status 节点而常年 early-return，导致灯一直停在
+  // 打开会话时的绿色「空闲」。这个函数只改灯/副标题，不重建 appbar，可高频调用。
+  function syncAppbarStatus() {
+    const dot = $('#appbar .conn-dot');
+    if (!dot) return;
+    const st = status();
+    const cls = `conn-dot ${st.dot || ''}`.trim();
+    if (dot.className !== cls) dot.className = cls;
+    dot.title = `会话状态：${st.label.split(' · ')[1] || '未连接'}`;
+    const sub = $('#appbar .absub');
+    const modelLabel = state.model ? state.model.split('/').pop() : 'DSH';
+    if (sub && sub.textContent !== modelLabel) sub.textContent = modelLabel;
+  }
+
+  function updateDockStatus() {
+    // 必须在下面 early-return 之前：新版底栏已无 .dock-status，但状态灯仍要跟随每次 patch。
+    syncAppbarStatus();
+    const el = $('.dock-status');
+    if (!el) return;
+    const st = status();
+    const parts = st.label.split(' · ');
+    el.innerHTML = `<span class="dot ${st.dot}"></span><b>${parts[0]}</b> · ${parts[1] || ''}`;
+    // updateDockStatus runs on every live patch and rewrites this row, so the
+    // balance chip must be re-mounted here too.
+    updateBalanceChip();
+  }
+
+  function updateDockAction() {
+    const s = state.session;
+    const run = $('.run-btn');
+    if (run) {
+      const active = Boolean(s && s.state === 'running');
+      run.hidden = !active;
+      run.classList.toggle('active', active);
+    }
+    const send = $('.send-btn');
+    if (send) send.classList.toggle('busy', Boolean(state.sending));
+  }
+
+  function startPolling() {
+    if (!INTERACTIVE || !state.session?.id || state.follow) return;
+    stopPolling();
+    state.pollIdle = 0;
+    state.pollTimer = setInterval(async () => {
+      if (!state.session?.id) { stopPolling(); return; }
+      try {
+        const data = await api(`sessions/${encodeURIComponent(state.session.id)}`);
+        applyDetail(data);
+        void refreshQuestions({ silent: true });
+        const active = data.state === 'running' || data.state === 'waiting';
+        state.pollIdle = active ? 0 : state.pollIdle + 1;
+        renderAppbar();
+        const sig = contentSignature(data);
+        if (sig !== state.contentSig) {
+          state.contentSig = sig;
+          renderContentPreservingOpen();
+        }
+        updateDockStatus();
+        updateDockAction();
+        if (!active && state.pollIdle >= 2 && !state.sending) stopPolling();
+      } catch (_) {
+        /* keep the current view on a transient poll failure */
+      }
+    }, 1600);
+  }
+
+
+  function stopFollow() {
+    if (state.followRetry) {
+      clearTimeout(state.followRetry);
+      state.followRetry = null;
+    }
+    if (state.follow) {
+      try { state.follow.close(); } catch (_) {}
+      state.follow = null;
+    }
+    if (state.liveRaf) cancelAnimationFrame(state.liveRaf);
+    state.liveRaf = null;
+  }
+
+  function startFollow(opts = {}) {
+    if (!INTERACTIVE || !state.session?.id) return;
+    if (typeof EventSource === 'undefined') return;
+    const sid = state.session.id;
+    if (!opts.force && state.follow && state.follow.__sid === sid) return;
+    stopFollow();
+    stopPolling();
+    const es = new EventSource(`${API}/follow?session=${encodeURIComponent(sid)}`);
+    es.__sid = sid;
+    state.follow = es;
+    let opened = false;
+    let warned = false;
+    es.onopen = () => { opened = true; state.lastFollowAt = Date.now(); };
+    es.onmessage = (event) => {
+      state.lastFollowAt = Date.now();
+      try { handleFollowMessage(JSON.parse(event.data)); } catch (_) {}
+    };
+    es.onerror = () => {
+      if (state.follow !== es) return;
+      try { es.close(); } catch (_) {}
+      state.follow = null;
+      if (!opened && !warned) {
+        warned = true;
+        toast('实时流未建立，正在重连…');
+      }
+      // 页面在后台时不要重连；回到前台会统一 refresh + 重开
+      if (document.hidden) return;
+      // 断开期间先用轮询兜底，避免完全空白
+      startPolling();
+      if (state.followRetry) clearTimeout(state.followRetry);
+      const delay = 1200 + Math.floor(Math.random() * 800);
+      state.followRetry = setTimeout(() => {
+        state.followRetry = null;
+        if (state.session?.id === sid && !document.hidden) startFollow({ force: true });
+      }, delay);
+    };
+  }
+
+  function handleFollowMessage(msg) {
+    if (!msg || !state.session) return;
+    if (msg.kind === 'snapshot') {
+      const detail = msg.session;
+      if (!detail || (detail.id && detail.id !== state.session.id)) return;
+      const blocksRebuilt = applyDetail(detail);
+      state.contentSig = contentSignature(detail);
+      state.live = null;
+      if (blocksRebuilt) renderContentPreservingOpen();
+      updateDockStatus();
+      updateDockAction();
+      void refreshQuestions({ silent: true });
+      return;
+    }
+    if (msg.kind === 'durable') {
+      applyPatch(msg.patch);
+      void refreshQuestions({ silent: true });
+      return;
+    }
+    if (msg.kind === 'assistant-stream') {
+      handleAssistantFrame(msg.frame);
+      return;
+    }
+    if (msg.kind === 'error') {
+      const err = String(msg.error || '');
+      if (err.includes('subagent Sessions require their durable parent address')) return;
+      toast(`实时流：${err || 'error'}`);
+    }
+  }
+
+  function appendBlocksToTimeline(blocks) {
+    const timeline = $('#timeline');
+    if (!timeline) {
+      renderContentPreservingOpen();
+      return;
+    }
+    // WebKit throws "The object can not be found here." if the reference
+    // node is detached from this timeline (for example during a re-render).
+    // Insert before live-slot only when it is really its child.
+    const slot = $('#live-slot');
+    const anchor = slot && slot.parentNode === timeline ? slot : null;
+    for (const block of blocks) {
+      const html = chatBlock(block);
+      if (!html) continue;
+      const tmp = document.createElement('div');
+      tmp.innerHTML = html;
+      while (tmp.firstChild) timeline.insertBefore(tmp.firstChild, anchor);
+    }
+  }
+
+  function updateApprovalSlot() {
+    const slot = $('#approval-slot');
+    if (slot) slot.innerHTML = state.approvals.map(approvalCard).join('');
+  }
+
+  function updateQuestionSlot() {
+    const slot = $('#question-slot');
+    if (slot) slot.innerHTML = state.questions.map(questionCard).join('');
+  }
+
+  function updateToolResult(result) {
+    const timeline = $('#timeline');
+    if (!timeline || !result) return;
+    const card = [...timeline.querySelectorAll('.tool-card')].find((node) => node.dataset.callId === result.callId);
+    if (!card) return;
+    const status = card.querySelector('.tool-status');
+    if (status) {
+      status.textContent = result.status || '完成';
+      status.classList.toggle('running', result.status === '运行中');
+      status.classList.toggle('error', result.status === '失败');
+    }
+    const body = card.querySelector('.tool-body');
+    if (body && result.body) body.textContent = result.body;
+    if (Array.isArray(result.images)) {
+      const content = card.querySelector('.tool-content');
+      const existing = card.querySelector('.tool-images');
+      if (existing) existing.remove();
+      if (content && result.images.length) content.insertAdjacentHTML('afterbegin', toolImagesHtml(result.images));
+    }
+  }
+
+  function removeOptimisticUser() {
+    const opt = state.optimisticUser;
+    if (!opt) return;
+    state.optimisticUser = null;
+    state.blocks = state.blocks.filter((block) => block !== opt.block);
+    try {
+      const selector = `[data-optimistic="${CSS.escape(opt.rpcId)}"]`;
+      document.querySelector(selector)?.remove();
+    } catch (_) {}
+    updateQueueChip();
+  }
+
+  function applyPatch(patch) {
+    if (!patch || !state.session) return;
+    const el = $('#content');
+    const stick = isNearBottom(el);
+    if (patch.title) state.session.title = patch.title;
+    if (patch.model) state.model = patch.model;
+    if (patch.engine) state.engine = patch.engine;
+    if (patch.blocks?.length) {
+      if (!state.blockKeys) rebuildBlockKeys();
+      const fresh = [];
+      const isOwnEcho = Boolean(
+        (patch.userRpcId && state.optimisticUser?.rpcId === patch.userRpcId) ||
+        (state.optimisticUser && patch.blocks?.some((b) => b.type === 'user' && (b.text === state.optimisticUser.text || (state.optimisticUser.block?.images?.length && b.images?.length))))
+      );
+      if (isOwnEcho) {
+        removeOptimisticUser();
+      }
+      for (const block of patch.blocks) {
+        const key = blockKey(block);
+        // 刚发出去的消息：必须放行，让 removeOptimisticUser 用真实块替换乐观回显。
+        // 其余已存在于全量历史中的事件（SSE 重连重放）一律丢弃，避免旧轮次乱入与 DOM 无限增长。
+        if (!isOwnEcho && key && state.blockKeys.has(key)) continue;
+        if (key) state.blockKeys.add(key);
+        state.blocks.push(block);
+        fresh.push(block);
+      }
+      if (fresh.length) {
+        try { appendBlocksToTimeline(fresh); }
+        catch (_) { renderContentPreservingOpen(); }
+      }
+    }
+    if (patch.userRpcId && state.optimisticUser?.rpcId === patch.userRpcId) removeOptimisticUser();
+    else if (state.optimisticUser && patch.blocks?.some((b) => b.type === 'user' && (b.text === state.optimisticUser.text || (state.optimisticUser.block?.images?.length && b.images?.length)))) removeOptimisticUser();
+    if (patch.blocks?.some(isQuotaBlock)) {
+      void refreshAccount();
+      setTimeout(redirectToTopUp, 350);
+    }
+    if (patch.toolResult) {
+      const block = state.blocks.find((b) => b.type === 'tool' && b._callId === patch.toolResult.callId);
+      if (block) {
+        block.status = patch.toolResult.status || '完成';
+        block.body = patch.toolResult.body || block.body;
+      }
+      updateToolResult(patch.toolResult);
+    }
+    if (patch.approval) {
+      if (!state.approvals.some((a) => a.id === patch.approval.id)) state.approvals.push(patch.approval);
+      updateApprovalSlot();
+    }
+    if (patch.approvalDecided) {
+      state.approvals = state.approvals.filter((a) => a.id !== patch.approvalDecided);
+      updateApprovalSlot();
+    }
+    if (patch.state) {
+      const waiting = patch.state === 'waiting' || state.approvals.length > 0;
+      state.session.state = waiting ? 'waiting' : patch.state;
+      state.session.stateLabel = waiting ? '待授权' : patch.stateLabel || (patch.state === 'running' ? '运行中' : '空闲');
+      if (!waiting && (patch.state === 'idle' || patch.state === 'error')) {
+        if (state.reconcileTimer) clearTimeout(state.reconcileTimer);
+        state.reconcileTimer = setTimeout(() => { void syncCurrentSession(true); }, 350);
+        setTimeout(() => { void refreshAccount(); }, 900);
+      }
+    }
+    if (patch.clearLive) {
+      state.live = null;
+      updateLiveSlot();
+    }
+    state.contentSig = contentSignature({
+      state: state.session.state,
+      blocks: state.blocks,
+      pending: state.approvals.length,
+    });
+    if (patch.title) renderAppbar();
+    updateDockStatus();
+    updateDockAction();
+    if (stick) scrollContentBottom();
+  }
+
+  // The live "正在思考" card body is its own scroll container (max-height:
+  // 52vh). If we only grow textContent, the visible text stays parked at an
+  // older scroll position while the "N 字" counter keeps climbing — the
+  // classic "only the character count goes up" bug. Keep it pinned to the
+  // tail while streaming, but never yank a reader who scrolled up on purpose.
+  function paintLiveThinkBody(body, text) {
+    if (!body) return;
+    const stick = isNearBottom(body, 48);
+    if (body.textContent !== text) body.textContent = text;
+    if (stick) body.scrollTop = body.scrollHeight;
+  }
+
+  function updateLiveSlot() {
+    const slot = $('#live-slot');
+    if (!slot) return;
+    const live = state.live;
+    if (!live || (!live.reasoning && !live.text)) {
+      slot.innerHTML = '';
+      return;
+    }
+    let think = slot.querySelector('[data-live-think]');
+    if (live.reasoning) {
+      if (!think) {
+        slot.insertAdjacentHTML('afterbegin', `<div class="row"><details class="thinking live" data-live-think="1"><summary><span class="think-ico">${icon('brain')}</span><span class="think-label">正在思考</span><span class="think-chars">0 字</span><span class="think-caret">${icon('chevron')}</span></summary><div class="think-body"></div></details></div>`);
+        think = slot.querySelector('[data-live-think]');
+        think.open = state.liveOpen;
+        think.addEventListener('toggle', () => {
+          state.liveOpen = think.open;
+          if (think.open) {
+            const b = think.querySelector('.think-body');
+            if (b) b.scrollTop = b.scrollHeight;
+          }
+        });
+      }
+      if (state.liveOpen && !think.open) think.open = true;
+      const body = think.querySelector('.think-body');
+      paintLiveThinkBody(body, live.reasoning);
+      const chars = think.querySelector('.think-chars');
+      if (chars) chars.textContent = `${live.reasoning.length} 字`;
+    } else if (think) {
+      think.closest('.row')?.remove();
+    }
+    let text = slot.querySelector('.live-text');
+    if (live.text) {
+      if (!text) {
+        slot.insertAdjacentHTML('beforeend', '<div class="row"><div class="card-md live-text"></div></div>');
+        text = slot.querySelector('.live-text');
+      }
+      if (text.textContent !== live.text) text.textContent = live.text;
+    } else if (text) {
+      text.closest('.row')?.remove();
+    }
+  }
+
+  function liveHtml() {
+    const live = state.live;
+    if (!live || (!live.reasoning && !live.text)) return '';
+    let html = '';
+    if (live.reasoning) {
+      html += `<div class="row"><details class="thinking live"${state.liveOpen ? ' open' : ''} data-live-think="1"><summary><span class="think-ico">${icon('brain')}</span><span class="think-label">正在思考</span><span class="think-chars">${live.reasoning.length} 字</span><span class="think-caret">${icon('chevron')}</span></summary><div class="think-body">${esc(live.reasoning).replace(/\n/g, '<br>')}</div></details></div>`;
+    }
+    if (live.text) {
+      html += `<div class="row"><div class="card-md live-text">${esc(live.text).replace(/\n/g, '<br>')}</div></div>`;
+    }
+    return html;
+  }
+
+  // Local, DOM-free fallback that mirrors sync-policy.js's processAssistantFrame.
+  // Only used when the shared policy module failed to load; keeps streaming alive.
+  function processAssistantFrameLocal(live, frame) {
+    if (!frame) return live;
+    if (frame.type === 'start') return { reasoning: '', text: '' };
+    if (frame.type === 'end' || frame.type === 'finish') return live;
+    const chunk = frame.chunk || frame;
+    if (!chunk) return live;
+    const current = live ? { reasoning: live.reasoning || '', text: live.text || '' } : { reasoning: '', text: '' };
+    const text = chunk.text || '';
+    if (chunk.type === 'reasoning-delta' || chunk.reasoning) current.reasoning += text || chunk.reasoning || '';
+    else if (chunk.type === 'text-delta' || chunk.type === 'text') current.text += text;
+    return current;
+  }
+
+  // Handle real-time `assistant-stream` SSE frames. Without this the stream
+  // frames were dropped (the handler was never defined), so the phone only saw
+  // the full reply appear at once instead of a live typewriter. Accumulate into
+  // state.live and paint the live slot on the next animation frame (coalesced).
+  function handleAssistantFrame(frame) {
+    if (!frame) return;
+    const policy = typeof window !== 'undefined' ? window.__MVC_SYNC__ : null;
+    state.live = policy && typeof policy.processAssistantFrame === 'function'
+      ? policy.processAssistantFrame(state.live, frame)
+      : processAssistantFrameLocal(state.live, frame);
+    // 流帧不走 applyPatch/updateDockStatus，必须在这里直接刷新状态灯，
+    // 否则「对话已经开始」但顶栏仍是绿色空闲。
+    syncAppbarStatus();
+    if (!state.live) return;
+    if (state.liveRaf) return;
+    const schedule = typeof requestAnimationFrame === 'function' ? requestAnimationFrame : (cb) => setTimeout(cb, 16);
+    state.liveRaf = schedule(() => {
+      state.liveRaf = null;
+      if (!state.session || state.provisional) return;
+      const el = $('#content');
+      // Measure BEFORE the live card grows: a big reasoning delta (or several
+      // coalesced frames after the tab was backgrounded) can add hundreds of
+      // px in one paint. Judging "am I at the bottom?" afterwards then reads
+      // false, auto-scroll stops for good, and only the char counter moves.
+      const stick = isNearBottom(el, 120);
+      updateLiveSlot();
+      if (stick) scrollContentBottom();
+    });
+  }
+
+  async function decideApproval(id, outcome, button) {
+    if (!id) return;
+    if (button) button.disabled = true;
+    try {
+      const r = await fetch(`${API}/approval`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-MobileVC': '1' },
+        body: JSON.stringify({ id, outcome }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data?.error || `${r.status} ${r.statusText}`);
+      if (data.stale) {
+        toast('这条审批已由其他端处理或已失效，正在同步状态…');
+        void syncCurrentSession(true);
+        return;
+      }
+      state.approvals = state.approvals.filter((a) => a.id !== id);
+      updateApprovalSlot();
+      if (state.session?.state === 'waiting') {
+        state.session.state = 'running';
+        state.session.stateLabel = '运行中';
+      }
+      updateDockStatus();
+      updateDockAction();
+      toast(outcome === 'allowed-once' ? '已允许一次' : '已拒绝');
+    } catch (e) {
+      if (button) button.disabled = false;
+      toast(`审批失败：${e.message}`);
+    }
+  }
+
+  async function refreshSession(opts = {}) {
+    if (!state.session?.id) return;
+    const { silent = false, forceFollow = false, preserve = false } = opts;
+    try {
+      const data = await api(`sessions/${encodeURIComponent(state.session.id)}`);
+      applyDetail(data, { force: true });
+      state.contentSig = contentSignature(data);
+      void refreshQuestions({ silent: true });
+      if (preserve) {
+        renderAppbar();
+        renderContentPreservingOpen();
+        updateDockStatus();
+        updateDockAction();
+      } else {
+        render();
+      }
+      if (INTERACTIVE) {
+        pingPresence();
+        startFollow({ force: forceFollow });
+      } else if (data.state === 'running') startPolling();
+      if (!silent) toast('已刷新 DSH 数据');
+    } catch (e) {
+      if (!silent) toast(`刷新失败：${e.message}`);
+    }
+  }
+
+  function mergeCurrentSessionIntoList(incomingList) {
+    const list = Array.isArray(incomingList) ? [...incomingList] : [];
+    if (state.session?.id && !list.some((s) => s.id === state.session.id)) {
+      list.unshift({
+        id: state.session.id,
+        title: state.session.title || '当前会话',
+        cwd: state.session.cwd || '',
+        state: state.session.state || 'running',
+        stateLabel: state.session.stateLabel || '运行中',
+        engine: state.engine || 'DSH',
+        model: state.model || '',
+        userCount: 1,
+        assistantCount: 0,
+        blockCount: (state.blocks || []).length || 1,
+        time: '刚刚',
+        updatedAt: Date.now(),
+        running: true,
+        subagent: false,
+      });
+    }
+    return list;
+  }
+
+  async function refreshSessionsOnly() {
+    try {
+      const data = await api('sessions?offset=0&limit=20');
+      state.sessions = mergeCurrentSessionIntoList(data.sessions || []);
+      state.sessionsTotal = Math.max(state.sessions.length, data.total || 0);
+      // 只刷新「会话列表」本身，绝不污染「会话轮次目录」等同名前缀弹层
+      if (isSheetKind('sessions')) setSheetBody(sessionsBody());
+    } catch (_) {
+      /* keep the current list on a transient failure */
+    }
+  }
+
+  // Durable-snapshot fallback used by the 2.5s timer. The decision is delegated
+  // to the shared, unit-tested policy in sync-policy.js. Re-implementing the
+  // guards inline previously reintroduced two shipped regressions:
+  //   * idle sessions were skipped → a silently-dead SSE never recovered, so
+  //     the phone froze while the desktop showed the reply;
+  //   * `state.sending` skipped the fallback → the reply from a pending prompt
+  //     never arrived on the phone.
+  // The policy intentionally does NOT block on scroll position or composer
+  // focus either (rendering is preserved, not dropped).
+  function shouldSyncNowFallback(force) {
+    if (force) return true;
+    if (!state.session?.id) return false;
+    if (document.hidden || state.syncBusy || state.loading || state.detailLoading) return false;
+    const now = Date.now();
+    const followAlive = Boolean(state.follow);
+    const running = state.session.state === 'running' || state.session.state === 'waiting';
+    if (followAlive && now - (state.lastFollowAt || 0) < 4000) return false;
+    if (state.live && now - (state.lastFollowAt || 0) < 10000) return false;
+    if (state.sending && now - (state.lastSyncAt || 0) < 4000) return false;
+    if (!running && now - (state.lastSyncAt || 0) < 8000) return false;
+    return true;
+  }
+
+  async function syncCurrentSession(force = false) {
+    if (!state.session?.id) return;
+    const policy = typeof window !== 'undefined' ? window.__MVC_SYNC__ : null;
+    const proceed = policy && typeof policy.shouldSyncNow === 'function'
+      ? policy.shouldSyncNow({
+          hidden: Boolean(document.hidden),
+          syncBusy: state.syncBusy,
+          loading: state.loading,
+          detailLoading: state.detailLoading,
+          sessionId: state.session.id,
+          followAlive: Boolean(state.follow),
+          lastFollowAt: state.lastFollowAt,
+          lastSyncAt: state.lastSyncAt,
+          state: state.session.state,
+          live: state.live,
+          sending: state.sending,
+          now: Date.now(),
+        }, force)
+      : shouldSyncNowFallback(force);
+    if (!proceed) return;
+    const sid = state.session.id;
+    state.syncBusy = true;
+    state.lastSyncAt = Date.now();
+    try {
+      const data = await api(`sessions/${encodeURIComponent(sid)}`);
+      if (state.session?.id !== sid) return;
+      const sig = contentSignature(data);
+      if (!force && sig === state.contentSig) return;
+      applyDetail(data, { force: true });
+      state.live = null;
+      state.contentSig = sig;
+      renderAppbar();
+      renderContentPreservingOpen();
+      updateDockStatus();
+      updateDockAction();
+    } catch (_) {
+      /* transient; the next tick retries */
+    } finally {
+      state.syncBusy = false;
+    }
+  }
+
+  async function refreshQueue() {
+    if (!INTERACTIVE || !state.session?.id) return;
+    const sid = state.session.id;
+    const seq = ++state.queueSeq;
+    try {
+      const data = await api(`queue?session=${encodeURIComponent(sid)}`);
+      if (seq !== state.queueSeq || state.session?.id !== sid) return;
+      state.queue = data.items || [];
+      const mine = state.optimisticUser ? state.queue.find((item) => item.rpcId && item.rpcId === state.optimisticUser.rpcId) : null;
+      if (mine && mine.text && mine.text !== state.optimisticUser.text) {
+        state.optimisticUser.text = mine.text;
+        state.optimisticUser.block.text = mine.text;
+        try {
+          const node = document.querySelector(`[data-optimistic="${CSS.escape(state.optimisticUser.rpcId)}"] .user-text`);
+          if (node) node.textContent = mine.text;
+        } catch (_) {}
+      }
+      updateQueueChip();
+      const title = document.querySelector('#sheet-root .sheet-head h2')?.textContent || '';
+      if (title.startsWith('插话')) setSheetBody(queueBody());
+    } catch (_) {
+      /* queue is optional; keep the current list */
+    }
+  }
+
+  function visibleInterjections() {
+    const sid = state.session?.id;
+    return state.interjections.filter((item) => !item.sessionId || item.sessionId === sid);
+  }
+
+  function stageInterjection(text, attachments, requestId, sessionId) {
+    state.interjections.push({
+      id: `local-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+      requestId,
+      sessionId,
+      text,
+      attachments,
+      at: Date.now(),
+    });
+  }
+
+  function removeInterjection(id) {
+    state.interjections = state.interjections.filter((item) => item.id !== id);
+    updateQueueChip();
+    const title = document.querySelector('#sheet-root .sheet-head h2')?.textContent || '';
+    if (title.startsWith('插话')) setSheetBody(queueBody());
+  }
+
+  async function sendInterjection(id, mode) {
+    const item = state.interjections.find((entry) => entry.id === id && (!entry.sessionId || entry.sessionId === state.session?.id));
+    if (!item || !state.session?.id || state.sending) {
+      if (state.sending) toast('上一条消息还在发送，请稍候');
+      return;
+    }
+    state.sending = true;
+    state.sendStartedAt = Date.now();
+    updateDockStatus();
+    try {
+      const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      const timer = controller ? setTimeout(() => controller.abort(), 35000) : null;
+      let r;
+      try {
+        r = await fetch(`${API}/prompt`, {
+          method: 'POST',
+          ...(controller ? { signal: controller.signal } : {}),
+          headers: { 'Content-Type': 'application/json', 'X-MobileVC': '1' },
+          body: JSON.stringify({
+            sessionId: state.session.id,
+            text: item.text,
+            attachments: item.attachments || [],
+            requestId: item.requestId,
+            mode,
+            clientTimeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          }),
+        });
+      } finally { if (timer) clearTimeout(timer); }
+      const data = await r.json();
+      if (!r.ok) throw new Error(data?.error || `${r.status} ${r.statusText}`);
+      state.interjections = state.interjections.filter((entry) => entry.id !== id);
+      toast(mode === 'steer' ? '已立即插话' : '已进入排队，当前轮结束后生效');
+      await refreshQueue();
+      startFollow();
+    } catch (e) {
+      const detail = e?.name === 'AbortError' ? '请求超时' : (e?.message || String(e));
+      toast(`插话失败：${detail}`);
+    } finally {
+      state.sending = false;
+      state.sendStartedAt = 0;
+      updateDockStatus();
+      updateDockAction();
+      updateQueueChip();
+      const title = document.querySelector('#sheet-root .sheet-head h2')?.textContent || '';
+      if (title.startsWith('插话')) setSheetBody(queueBody());
+    }
+  }
+
+  function updateQueueChip() {
+    const el = $('#queue-banner');
+    if (!el) return;
+    const local = visibleInterjections();
+    if (local.length) {
+      const latest = local[local.length - 1];
+      el.hidden = false;
+      el.innerHTML = `<span class="qb-kicker">待处理插话 · ${local.length}</span>
+        <span class="qb-text">${esc(latest.text || '（无文本）')}</span>
+        <span class="qb-action">查看 / 立即插话</span>`;
+      return;
+    }
+    if (state.queue.length) {
+      const latest = state.queue[state.queue.length - 1];
+      el.hidden = false;
+      el.innerHTML = `<span class="qb-kicker">插话队列 · ${state.queue.length}</span>
+        <span class="qb-text">${esc(latest.text || '（无文本）')}</span>
+        <span class="qb-action">查看 / 修改</span>`;
+      return;
+    }
+    if (state.optimisticUser && state.optimisticUser.busy) {
+      el.hidden = false;
+      el.innerHTML = `<span class="qb-kicker">插话排队中</span>
+        <span class="qb-text">${esc(state.optimisticUser.text)}</span>
+        <span class="qb-action">查看 / 立即插话</span>`;
+      return;
+    }
+    el.hidden = true;
+    el.innerHTML = '';
+  }
+
+  function queueBody() {
+    const localRows = visibleInterjections().map((item) => `<div class="queue-item local">
+      <div class="queue-text">${esc(item.text || '（无文本）')}</div>
+      <div class="note">尚未提交 · 选择「立即插话」或「排队」</div>
+      <div class="queue-actions">
+        <button class="btn primary" data-act="interjection-steer" data-id="${esc(item.id)}">立即插话</button>
+        <button class="btn ghost" data-act="interjection-queue" data-id="${esc(item.id)}">排队</button>
+        <button class="btn ghost danger" data-act="interjection-remove" data-id="${esc(item.id)}">删除</button>
+      </div>
+    </div>`).join('');
+    const rows = state.queue.map((item) => `<div class="queue-item">
+      <div class="queue-text">${esc(item.text || '（无文本）')}</div>
+      <div class="queue-actions">
+        <button class="btn ghost" data-act="queue-edit" data-id="${esc(item.id)}">修改</button>
+        <button class="btn ghost" data-act="queue-remove" data-id="${esc(item.id)}">删除</button>
+        <button class="btn primary" data-act="queue-steer" data-id="${esc(item.id)}">立即插话</button>
+      </div>
+    </div>`).join('');
+    const pending = !rows && !localRows && state.optimisticUser
+      ? `<div class="queue-item"><div class="queue-text">${esc(state.optimisticUser.text)}</div><div class="note">已发送，正在同步 DSH 队列…</div></div>`
+      : '';
+    return `<div class="queue-list">${localRows || rows || pending || '<div class="note">当前没有待处理的插话。</div>'}</div>
+      <div class="note">发送插话时先暂存；点「立即插话」打断当前轮，点「排队」等当前轮结束后生效。</div>`;
+  }
+
+  async function queueSheet() {
+    openSheet({ title: '插话队列', sub: '执行中的待处理消息', body: queueBody() });
+    await refreshQueue();
+  }
+
+  function editQueue(id) {
+    const item = state.queue.find((x) => x.id === id);
+    if (!item) return;
+    openSheet({
+      title: '修改插话',
+      sub: '只修改仍在队列里的消息',
+      body: `<div class="field"><label>内容</label><textarea id="queue-edit" style="min-height:160px">${esc(item.text || '')}</textarea></div>
+        <div class="action-actions"><button class="btn ghost wide" data-act="queue">返回</button><button class="btn primary wide" data-act="queue-save" data-id="${esc(id)}">保存</button></div>`,
+    });
+  }
+
+  async function queueAction(id, action, text = '') {
+    if (!state.session?.id || !id) return;
+    try {
+      const r = await fetch(`${API}/queue`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-MobileVC': '1' },
+        body: JSON.stringify({ sessionId: state.session.id, itemId: id, action, text }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data?.error || `${r.status} ${r.statusText}`);
+      const item = state.queue.find((entry) => entry.id === id);
+      if (action === 'remove' && item && state.optimisticUser?.rpcId === item.rpcId) removeOptimisticUser();
+      closeSheet();
+      await refreshQueue();
+      toast(action === 'edit' ? '插话已修改' : action === 'remove' ? '插话已删除' : '已立即插话');
+    } catch (e) {
+      toast(`插话操作失败：${e.message}`);
+    }
+  }
+
+  const TOPUP_FALLBACK = 'https://platform.deepseek.com/top_up';
+  const USAGE_FALLBACK = 'https://platform.deepseek.com/usage';
+
+  function walletText(wallet) {
+    if (!wallet) return '';
+    // A wallet row can arrive without a numeric balance; never render "¥undefined".
+    if (wallet.balance == null || wallet.balance === '') return '';
+    const symbol = wallet.currency === 'USD' ? '$' : '¥';
+    return `${symbol}${wallet.balance}`;
+  }
+
+  function accountBalanceText() {
+    const a = state.account;
+    if (state.accountLoading && !a?.available) return '余额 …';
+    if (!a?.available) return '余额 —';
+    if (!a.balance?.ready) return '余额读取失败';
+    const wallets = a.balance.wallets || [];
+    if (!wallets.length) return '余额 —';
+    const main = wallets.map(walletText).join(' / ');
+    const bonus = (a.balance.bonusWallets || []).map(walletText).filter(Boolean).join(' / ');
+    return bonus ? `${main} + ${bonus} 赠金` : main;
+  }
+
+  function accountLow() {
+    const wallets = state.account?.balance?.wallets || [];
+    const n = wallets.reduce((sum, w) => sum + (Number(w.balance) || 0), 0);
+    return wallets.length > 0 && n <= 5;
+  }
+
+  function updateBalanceChip() {
+    let el = $('#balance-chip');
+    if (!el) {
+      // Older/partial dock markup must not swallow the balance. Create the
+      // chip next to the DSH status whenever the account service is present.
+      const status = $('.dock-status');
+      if (!status) return;
+      el = document.createElement('button');
+      el.type = 'button';
+      el.id = 'balance-chip';
+      el.className = 'balance-chip';
+      el.dataset.act = 'account';
+      el.hidden = true;
+      status.appendChild(el);
+    }
+    const a = state.account;
+    el.hidden = false;
+    el.textContent = accountBalanceText();
+    el.classList.toggle('low', Boolean(a?.available) && accountLow());
+    const wallets = a?.balance?.wallets || [];
+    el.classList.toggle('zero', Boolean(a?.available && a.balance?.ready && wallets.every((w) => Number(w.balance) <= 0)));
+  }
+
+  async function refreshAccount() {
+    if (state.accountBusy) return;
+    state.accountBusy = true;
+    state.accountLoading = true;
+    updateBalanceChip();
+    let timer = null;
+    try {
+      const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      if (controller) timer = setTimeout(() => controller.abort(), 12000);
+      const r = await fetch(`${API}/account`, {
+        cache: 'no-store',
+        ...(controller ? { signal: controller.signal } : {}),
+        headers: { Accept: 'application/json' },
+      });
+      if (!r.ok) throw new Error(`account HTTP ${r.status}`);
+      const data = await r.json();
+      state.account = {
+        available: Boolean(data?.available),
+        status: String(data?.status || 'unknown'),
+        links: {
+          topUpUrl: String(data?.links?.topUpUrl || TOPUP_FALLBACK),
+          usageUrl: String(data?.links?.usageUrl || USAGE_FALLBACK),
+        },
+        balance: data?.balance || null,
+      };
+      if (data?.balance?.ready && (data.balance.wallets || []).some((w) => Number(w.balance) > 0)) {
+        state.quotaRedirected = false;
+      }
+      if (state.accountRetry) { clearTimeout(state.accountRetry); state.accountRetry = null; }
+      const title = document.querySelector('#sheet-root .sheet-head h2')?.textContent || '';
+      if (title.startsWith('账号与余额')) setSheetBody(accountBody());
+    } catch (_) {
+      state.account.available = false;
+      if (state.accountRetry) clearTimeout(state.accountRetry);
+      state.accountRetry = setTimeout(() => { state.accountRetry = null; void refreshAccount(); }, 8000);
+    } finally {
+      if (timer) clearTimeout(timer);
+      state.accountLoading = false;
+      state.accountBusy = false;
+      updateBalanceChip();
+    }
+  }
+
+  function openTopUp() {
+    const url = state.account?.links?.topUpUrl || TOPUP_FALLBACK;
+    try {
+      const win = window.open(url, '_blank', 'noopener');
+      if (!win) location.href = url;
+    } catch (_) {
+      location.href = url;
+    }
+  }
+
+  function redirectToTopUp() {
+    if (state.quotaRedirected) return;
+    state.quotaRedirected = true;
+    toast('余额不足，正在打开官方充值页…');
+    setTimeout(openTopUp, 250);
+  }
+
+  function isQuotaBlock(block) {
+    return block?.type === 'error' && (
+      block.code === 'QUOTA' ||
+      block.code === 'ACCOUNT_QUOTA' ||
+      Number(block.status) === 402 ||
+      /额度|余额|insufficient|balance|quota/i.test(`${block.title || ''} ${block.message || ''}`)
+    );
+  }
+
+  function accountBody() {
+    const a = state.account;
+    const status = a?.status === 'credential-stored' ? '已登录 DeepSeek 账号' : a?.status === 'api-key' ? '使用 DEEPSEEK_API_KEY · 官方余额' : a?.status === 'signed-out' ? '未登录 DeepSeek 账号' : '账号状态未知';
+    const wallets = a?.balance?.ready ? (a.balance.wallets || []) : [];
+    const bonus = a?.balance?.ready ? (a.balance.bonusWallets || []) : [];
+    const rows = wallets.length
+      ? wallets.map((w) => `<div class="lrow"><span class="ico-badge">${icon('wallet')}</span><div class="l-main"><div class="l-title">${w.currency === 'USD' ? '美元余额' : '充值余额'}</div><div class="l-sub">${esc(walletText(w))}</div></div></div>`).join('')
+      : `<div class="note">${a?.available ? '暂时读不到余额，点下面刷新重试。' : '当前 DSH 没有可用的账号余额服务。'}</div>`;
+    const bonusRows = bonus.length
+      ? bonus.map((w) => `<div class="lrow"><span class="ico-badge gray">${icon('gift')}</span><div class="l-main"><div class="l-title">赠金余额</div><div class="l-sub">${esc(walletText(w))}</div></div></div>`).join('')
+      : '';
+    return `<div class="account-summary">
+        <div class="account-amount">${esc(accountBalanceText())}</div>
+        <div class="account-state">${esc(status)}</div>
+      </div>
+      <div class="account-links">
+        <button class="btn primary" data-act="top-up">去官方充值</button>
+        <button class="btn ghost" data-act="account-refresh">刷新余额</button>
+        <button class="btn ghost" data-act="account-usage">查看用量</button>
+      </div>
+      ${rows}${bonusRows}
+      <div class="note">余额由 DeepSeek 官方账号提供；充值会打开官方页面。</div>`;
+  }
+
+  async function accountSheet() {
+    openSheet({ title: '账号与余额', sub: 'DSH · 官方账号', body: accountBody() });
+    await refreshAccount();
+  }
+
+  async function refreshJobs() {
+    if (!INTERACTIVE || !state.session?.id) return;
+    const sid = state.session.id;
+    const seq = ++state.jobsSeq;
+    try {
+      const data = await api(`jobs?session=${encodeURIComponent(sid)}`);
+      if (seq !== state.jobsSeq || state.session?.id !== sid) return;
+      state.jobs = data.jobs || [];
+      updateJobsChip();
+      const title = document.querySelector('#sheet-root .sheet-head h2')?.textContent || '';
+      if (title.startsWith('后台')) setSheetBody(jobsBody());
+    } catch (_) {}
+  }
+
+  function updateJobsChip() {
+    const chips = document.querySelector('.dock .rail .chips');
+    if (!chips) return;
+    let button = chips.querySelector('[data-act="jobs"]');
+    if (!state.jobs.length) { button?.remove(); return; }
+    if (!button) {
+      button = document.createElement('button');
+      button.className = 'tchip';
+      button.dataset.act = 'jobs';
+      chips.appendChild(button);
+    }
+    button.innerHTML = `${icon('play')}<span>后台 · ${state.jobs.length}</span>`;
+  }
+
+  function jobsBody() {
+    const rows = state.jobs.map((job) => {
+      const running = job.status === 'running' || job.status === 'stopping';
+      return `<div class="job-card">
+        <div class="job-head"><b>${esc(job.label || '后台任务')}</b><span class="chip ${running ? 'green' : job.status === 'failed' ? 'red' : ''}">${esc(job.status || '')}</span></div>
+        <div class="job-meta">${esc(job.progress || job.detail || '')}${job.startedAt ? ` · ${durationLabel((job.finishedAt || Date.now()) - job.startedAt)}` : ''}</div>
+        <div class="job-actions"><button class="btn ghost" data-act="job-output" data-id="${esc(job.id)}">输出</button>${running ? `<button class="btn ghost danger" data-act="job-kill" data-id="${esc(job.id)}">停止</button>` : ''}</div>
+      </div>`
+    }).join('');
+    return `<div class="job-list">${rows || '<div class="note">当前没有后台任务。</div>'}</div>
+      <div class="note">后台任务由 DSH jobs 管理；长命令应在后台跑，完成后再回收结果。</div>`;
+  }
+
+  async function jobsSheet() {
+    openSheet({ title: '后台任务', sub: 'DSH jobs · 实时', body: jobsBody() });
+    await refreshJobs();
+  }
+
+  async function killJob(id) {
+    if (!state.session?.id || !id) return;
+    try {
+      const r = await fetch(`${API}/jobs/kill`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-MobileVC': '1' },
+        body: JSON.stringify({ sessionId: state.session.id, id }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data?.error || r.statusText);
+      toast('已请求停止后台任务');
+      await refreshJobs();
+    } catch (e) { toast(`停止失败：${e.message}`); }
+  }
+
+  async function jobOutput(id) {
+    if (!state.session?.id || !id) return;
+    try {
+      const data = await api(`jobs/output?session=${encodeURIComponent(state.session.id)}&id=${encodeURIComponent(id)}`);
+      openSheet({ title: '后台输出', sub: '只读 · 最近 12KB', tall: true, body: `<pre class="file-pre">${esc(data.text || '（暂无输出）')}</pre>` });
+    } catch (e) { toast(`读取输出失败：${e.message}`); }
+  }
+
+  function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const raw = atob(base64);
+    const out = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i += 1) out[i] = raw.charCodeAt(i);
+    return out;
+  }
+
+  async function enablePush() {
+    if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+      toast('这个浏览器不支持 Web Push'); return;
+    }
+    const standalone = window.matchMedia?.('(display-mode: standalone)')?.matches || navigator.standalone;
+    if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !standalone) {
+      toast('iPhone 请先添加到主屏幕，再从主屏幕打开'); return;
+    }
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') { toast('通知权限未开启'); return; }
+      const reg = await navigator.serviceWorker.ready;
+      const key = await api('push/key');
+      if (!key.publicKey) throw new Error('push key unavailable');
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(key.publicKey) });
+      }
+      const r = await fetch(`${API}/push/subscribe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-MobileVC': '1' },
+        body: JSON.stringify({ subscription: sub.toJSON() }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data?.error || r.statusText);
+      try { localStorage.setItem('mobilevc.push', '1'); } catch (_) {}
+      toast(`通知已开启（${data.count || 1} 台设备）`);
+    } catch (e) { toast(`开启通知失败：${e.message}`); }
+  }
+
+  async function testPush() {
+    try {
+      const r = await fetch(`${API}/push/test`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-MobileVC': '1' }, body: '{}' });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data?.error || r.statusText);
+      if (data.sent) toast(`已发送 ${data.sent} 条测试通知`);
+      else if (data.subscriptions > 0) toast(`订阅存在，但推送失败：${data.errors?.[0] || '未知错误'}`);
+      else toast('没有已订阅设备，请先开启通知');
+    } catch (e) { toast(`测试通知失败：${e.message}`); }
+  }
+
+  async function pingPresence() {
+    if (!INTERACTIVE || !state.session?.id || document.hidden) return;
+    try {
+      await fetch(`${API}/presence`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-MobileVC': '1' },
+        body: JSON.stringify({ sessionId: state.session.id }),
+      });
+    } catch (_) {
+      /* presence is best-effort; SSE remains the primary path */
+    }
+  }
+
+  async function refreshOnResume() {
+    if (document.visibilityState === 'hidden' || state.resumeInFlight) return;
+    void refreshAccount();
+    if (state.sending && state.sendStartedAt && Date.now() - state.sendStartedAt > 40000) {
+      state.sending = false;
+      state.sendStartedAt = 0;
+      toast('发送状态已恢复');
+    }
+    if (state.loading || state.detailLoading) return;
+    state.resumeInFlight = true;
+    try {
+      if (!state.session?.id) await loadSessions();
+      else {
+        await refreshSession({ silent: true, forceFollow: true, preserve: true });
+        await refreshSessionsOnly();
+      }
+    } finally {
+      state.resumeInFlight = false;
+    }
+  }
+
+  /* ---------- boot animation ---------- */
+  const BOOT_VIDEO_SRC = 'assets/startup-boot.mp4';
+  let bootActive = false;
+  let bootTimer = null;
+  let hiddenAt = 0;
+  let soundUnlocked = false;
+
+  function finishBoot() {
+    if (!bootActive) return;
+    bootActive = false;
+    if (bootTimer) { clearTimeout(bootTimer); bootTimer = null; }
+    const overlay = $('#boot-overlay');
+    const video = $('#boot-video');
+    const hint = $('#boot-sound-hint');
+    try { video?.pause(); } catch (_) {}
+    if (hint) hint.hidden = true;
+    if (!overlay) return;
+    overlay.classList.add('leaving');
+    setTimeout(() => {
+      overlay.hidden = true;
+      overlay.classList.remove('leaving');
+    }, 420);
+  }
+
+  function setBootSoundHint(show) {
+    const hint = $('#boot-sound-hint');
+    if (hint) hint.hidden = !show;
+  }
+
+  function fallbackMutedBoot(video) {
+    try {
+      video.muted = true;
+      video.volume = 1;
+      const p = video.play();
+      if (p?.catch) p.catch(() => {});
+      setBootSoundHint(true);
+    } catch (_) {}
+  }
+
+  function playMobileBoot() {
+    return;
+    const overlay = $('#boot-overlay');
+    const video = $('#boot-video');
+    if (!overlay || !video || bootActive) return;
+    if (new URLSearchParams(location.search).has('boot=0')) return;
+    bootActive = true;
+    overlay.hidden = false;
+    overlay.classList.remove('leaving');
+    setBootSoundHint(false);
+    try {
+      video.pause();
+      video.currentTime = 0;
+      video.volume = 1;
+      // Try sound first. Browsers may reject unmuted autoplay; fall back to a
+      // muted loop and let the first tap on the page enable the audio.
+      video.muted = false;
+      const played = video.play();
+      if (played?.then) {
+        played.then(() => {
+          if (!video.muted) {
+            soundUnlocked = true;
+            setBootSoundHint(false);
+          }
+        }).catch(() => fallbackMutedBoot(video));
+      }
+    } catch (_) {
+      fallbackMutedBoot(video);
+    }
+    bootTimer = setTimeout(finishBoot, 12000);
+  }
+
+  function enableBootSound() {
+    if (!bootActive) return;
+    const video = $('#boot-video');
+    if (!video) return;
+    try {
+      video.muted = false;
+      video.volume = 1;
+      const played = video.play();
+      if (played?.then) {
+        played.then(() => {
+          soundUnlocked = true;
+          setBootSoundHint(false);
+        }).catch(() => setBootSoundHint(true));
+      }
+    } catch (_) {
+      setBootSoundHint(true);
+    }
+  }
+
+  function bindBootControls() {
+    const overlay = $('#boot-overlay');
+    const video = $('#boot-video');
+    if (!overlay || !video) return;
+    video.addEventListener('ended', finishBoot);
+    video.addEventListener('error', finishBoot);
+    // No visible controls. A tap anywhere unlocks audio without skipping.
+    document.addEventListener('pointerdown', enableBootSound, { passive: true });
+  }
+
+  function maybeBootOnResume() {
+    if (document.hidden || !hiddenAt) return;
+    const away = Date.now() - hiddenAt;
+    hiddenAt = 0;
+    if (away > 1200) playMobileBoot('resume');
+  }
+
+  function clearAttachments() {
+    for (const item of state.attachments) {
+      if (item.preview) URL.revokeObjectURL(item.preview);
+    }
+    state.attachments = [];
+    updateAttachStrip();
+  }
+
+  function removeAttachment(id) {
+    const item = state.attachments.find((x) => x.id === id);
+    if (item?.preview) URL.revokeObjectURL(item.preview);
+    state.attachments = state.attachments.filter((x) => x.id !== id);
+    updateAttachStrip();
+  }
+
+  function updateAttachStrip() {
+    const el = $('#attach-strip');
+    if (!el) return;
+    el.innerHTML = state.attachments.map((item) => `<div class="attach-chip">
+      ${item.kind === 'image' && item.preview ? `<img src="${esc(item.preview)}" alt="">` : `<span class="attach-file-ico">${icon('file')}</span>`}
+      <span class="attach-name">${esc(item.name)}</span>
+      <button class="attach-remove" data-act="remove-attachment" data-id="${esc(item.id)}" aria-label="移除">${icon('x')}</button>
+    </div>`).join('');
+    el.hidden = state.attachments.length === 0;
+  }
+
+  function readFileBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = String(reader.result || '');
+        resolve(result.slice(result.indexOf(',') + 1));
+      };
+      reader.onerror = () => reject(reader.error || new Error('read failed'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function handleFiles(fileList, forcedKind) {
+    const files = [...(fileList || [])].slice(0, 8);
+    const maxOne = 12 * 1024 * 1024;
+    let total = state.attachments.reduce((n, a) => n + (a.size || 0), 0);
+    for (const file of files) {
+      if (file.size > maxOne || total + file.size > 20 * 1024 * 1024) {
+        toast(`附件太大：${file.name}`);
+        continue;
+      }
+      const declared = String(file.type || '').toLowerCase().replace('image/jpg', 'image/jpeg');
+      const ext = String(file.name || '').toLowerCase().split('.').pop();
+      const inferred = declared || ({ png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', gif: 'image/gif' }[ext] || '');
+      const kind = forcedKind === 'image' || declared.startsWith('image/') ? 'image' : 'file';
+      if (kind === 'image' && !['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(inferred)) {
+        toast(`不支持的图片格式：${file.name}`);
+        continue;
+      }
+      try {
+        const data = await readFileBase64(file);
+        state.attachments.push({
+          id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+          kind,
+          name: file.name || (kind === 'image' ? 'image.png' : 'file'),
+          mediaType: kind === 'image' ? inferred : (declared || 'application/octet-stream'),
+          data,
+          preview: kind === 'image' ? URL.createObjectURL(file) : '',
+          size: file.size,
+        });
+        total += file.size;
+      } catch (error) {
+        toast(`读取附件失败：${error.message}`);
+      }
+    }
+    closeSheet();
+    updateAttachStrip();
+    if (state.attachments.length) toast(`已添加 ${state.attachments.length} 个附件`);
+  }
+
+  function attachmentSheet() {
+    openSheet({
+      title: '功能与附件',
+      sub: '多媒体直传 · 工作区与助手工具',
+      body: `
+        <div class="sheet-section-title">添加附件</div>
+        <div class="attach-grid">
+          <button class="attach-card" data-act="pick-camera">
+            <span class="attach-ico blue">${icon('camera')}</span>
+            <span class="attach-lbl">拍照</span>
+            <span class="attach-sub">相机实时拍摄</span>
+          </button>
+          <button class="attach-card" data-act="pick-image">
+            <span class="attach-ico purple">${icon('image')}</span>
+            <span class="attach-lbl">相册</span>
+            <span class="attach-sub">图片选择</span>
+          </button>
+          <button class="attach-card" data-act="pick-file">
+            <span class="attach-ico amber">${icon('file')}</span>
+            <span class="attach-lbl">本地文件</span>
+            <span class="attach-sub">上传为附件</span>
+          </button>
+        </div>
+        <input id="pick-camera-input" type="file" accept="image/*" capture="environment" hidden>
+        <input id="pick-image-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden>
+        <input id="pick-file-input" type="file" multiple hidden>
+
+        <div class="sheet-section-title" style="margin-top:16px">工作区与工具</div>
+        <div class="attach-grid grid-4">
+          <button class="attach-card" data-act="open-files-from-plus">
+            <span class="attach-ico emerald">${icon('folder')}</span>
+            <span class="attach-lbl">文件</span>
+            <span class="attach-sub">目录浏览</span>
+          </button>
+          <button class="attach-card" data-act="open-trace-from-plus">
+            <span class="attach-ico cyan">${icon('terminal')}</span>
+            <span class="attach-lbl">执行迹</span>
+            <span class="attach-sub">工具记录</span>
+          </button>
+          <button class="attach-card" data-act="open-plugins-from-plus">
+            <span class="attach-ico indigo">${icon('puzzle')}</span>
+            <span class="attach-lbl">插件</span>
+            <span class="attach-sub">扩展管理</span>
+          </button>
+          <button class="attach-card" data-act="open-memory-from-plus">
+            <span class="attach-ico rose">${icon('brain')}</span>
+            <span class="attach-lbl">Memory</span>
+            <span class="attach-sub">AGENTS</span>
+          </button>
+        </div>
+        <div class="note" style="margin-top:12px">单个附件最大 12MB，最多 8 个。图片需模型支持视觉输入。</div>
+      `,
+    });
+  }
+
+  function newRequestId() {
+    try {
+      if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return `mvc-${crypto.randomUUID()}`;
+      }
+    } catch (_) {}
+    return `mvc-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  }
+
+  async function sendMessage() {
+    if (!INTERACTIVE) return;
+    if (state.sending) { toast('上一条消息还在发送，请稍候或刷新页面'); return; }
+    const text = (state.draft || '').trim();
+    if (!text && state.attachments.length === 0) return;
+
+    const isNew = Boolean(state.provisional || !state.session?.id);
+
+    // 懒创建：点击加号是前端暂存态，真正打字发送时才在后台申请落库并挂载工作区
+    if (isNew) {
+      try {
+        state.sending = true;
+        updateDockStatus();
+        updateDockAction();
+        const created = await api('sessions/new', { method: 'POST', body: JSON.stringify({ cwd: state.cwd || '' }) });
+        if (!created?.sessionId) throw new Error(created?.error || '创建会话失败');
+        state.provisional = false;
+        state.session = {
+          id: created.sessionId,
+          title: text.slice(0, 30) || (state.attachments[0]?.name ? `【图片】${state.attachments[0].name.slice(0, 20)}` : '新会话'),
+          cwd: state.cwd || '',
+          state: 'idle',
+          stateLabel: '空闲',
+          engine: state.engine || 'DSH',
+          model: state.model || 'default',
+        };
+        const newSessionItem = {
+          id: created.sessionId,
+          title: state.session.title,
+          cwd: state.session.cwd,
+          state: 'running',
+          stateLabel: '运行中',
+          engine: state.engine || 'DSH',
+          model: state.model || '',
+          userCount: 1,
+          assistantCount: 0,
+          blockCount: 1,
+          time: '刚刚',
+          updatedAt: Date.now(),
+          running: true,
+          subagent: false,
+        };
+        state.sessions = [newSessionItem, ...(state.sessions || []).filter((s) => s.id !== created.sessionId)];
+        state.blocks = [];
+        state.blockKeys = new Set();
+        state.turns = [];
+        state.interjections = [];
+        renderAppbar();
+        startFollow();
+      } catch (e) {
+        state.sending = false;
+        updateDockStatus();
+        updateDockAction();
+        toast(`创建会话失败：${e.message}`);
+        return;
+      }
+    }
+
+    const pendingAttachments = state.attachments.map((a) => ({ kind: a.kind, name: a.name, mediaType: a.mediaType, data: a.data }));
+    // 新会话第一句绝对不进插话队列，直接作为主问题提交！
+    const busy = isNew ? false : Boolean(state.session && (state.session.state === 'running' || state.session.state === 'waiting'));
+
+    if (busy) {
+      state.sending = false;
+      updateDockStatus();
+      updateDockAction();
+      const requestId = newRequestId();
+      stageInterjection(text, pendingAttachments, requestId, state.session.id);
+      state.draft = '';
+      clearAttachments();
+      const composerEl = $('#composer');
+      if (composerEl) {
+        composerEl.value = '';
+        composerEl.style.height = 'auto';
+      }
+      updateQueueChip();
+      updateDockAction();
+      toast('插话已暂存 · 点「立即插话」打断当前轮，或点「排队」');
+      return;
+    }
+
+    state.sending = true;
+    state.sendStartedAt = Date.now();
+    updateDockStatus();
+
+    // 立即清空输入框与附件
+    state.draft = '';
+    clearAttachments();
+    const composerEl = $('#composer');
+    if (composerEl) {
+      composerEl.value = '';
+      composerEl.style.height = 'auto';
+    }
+
+    let sendStep = 'init';
+    let promptTimer = null;
+    try {
+      const requestId = newRequestId();
+      if (text || pendingAttachments.length) {
+        sendStep = 'optimistic';
+        try {
+          const block = { type: 'user', text, images: pendingAttachments.filter(a => a.kind === 'image'), files: pendingAttachments.filter(a => a.kind === 'file'), _optimistic: true, _rpcId: requestId, _busy: false };
+          state.optimisticUser = { rpcId: requestId, text, block, busy: false };
+          state.blocks.push(block);
+          renderContent();
+          requestAnimationFrame(scrollContentBottom);
+        } catch (uiError) {
+          console.warn('mobilevc optimistic ui failed', uiError);
+        }
+      }
+      sendStep = 'fetch';
+      const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      if (controller) promptTimer = setTimeout(() => controller.abort(), 35000);
+      const r = await fetch(`${API}/prompt`, {
+        method: 'POST',
+        ...(controller ? { signal: controller.signal } : {}),
+        headers: { 'Content-Type': 'application/json', 'X-MobileVC': '1' },
+        body: JSON.stringify({
+          sessionId: state.session.id,
+          text,
+          attachments: pendingAttachments,
+          requestId,
+          mode: 'queue',
+          clientTimeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        }),
+      });
+      if (promptTimer) { clearTimeout(promptTimer); promptTimer = null; }
+      sendStep = 'response';
+      const data = await r.json();
+      if (!r.ok) throw new Error(data?.error || `${r.status} ${r.statusText}`);
+      state.session.state = 'running';
+      state.session.stateLabel = '运行中';
+      state.sending = false;
+      state.sendStartedAt = 0;
+      updateDockStatus();
+      updateDockAction();
+      if (state.follow) {
+        startFollow();
+      } else {
+        const fresh = await api(`sessions/${encodeURIComponent(state.session.id)}`);
+        applyDetail(fresh, { force: true });
+        state.contentSig = contentSignature(fresh);
+        render();
+        requestAnimationFrame(scrollContentBottom);
+        startFollow();
+      }
+      $('#composer')?.focus();
+      toast('已发送到 DSH');
+    } catch (e) {
+      if (promptTimer) clearTimeout(promptTimer);
+      state.sending = false;
+      state.sendStartedAt = 0;
+      removeOptimisticUser();
+      updateDockStatus();
+      updateDockAction();
+      const detail = e?.name === 'AbortError' ? '请求超时' : (e?.message || String(e));
+      toast(`发送失败[${sendStep}]：${detail}`);
+      if (/余额|额度|insufficient|balance|quota/i.test(detail)) {
+        void refreshAccount();
+        setTimeout(redirectToTopUp, 800);
+      }
+    }
+  }
+
+  async function cancelRun() {
+    if (!INTERACTIVE || !state.session) return;
+    try {
+      const r = await fetch(`${API}/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-MobileVC': '1' },
+        body: JSON.stringify({ sessionId: state.session.id }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data?.error || `${r.status} ${r.statusText}`);
+      toast('已请求停止');
+      startPolling();
+    } catch (e) {
+      toast(`停止失败：${e.message}`);
+    }
+  }
+
+
+  function getEffectiveTheme(mode) {
+    if (mode === 'light' || mode === 'dark') return mode;
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
+  function setThemeMode(mode) {
+    const valid = mode === 'light' || mode === 'dark' ? mode : 'auto';
+    state.themeMode = valid;
+    try { localStorage.setItem('mobilevc.themeMode', valid); } catch (_) {}
+    state.theme = getEffectiveTheme(valid);
+    try { localStorage.setItem('mobilevc.theme', state.theme); } catch (_) {}
+    document.documentElement.dataset.theme = state.theme;
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', state.theme === 'dark' ? '#000000' : '#F6F8FC');
+    render();
+    if (isSheetKind('settings')) {
+      settingsSheet();
+    }
+  }
+
+  if (typeof window !== 'undefined' && window.matchMedia) {
+    try {
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        if (state.themeMode === 'auto') {
+          setThemeMode('auto');
+        }
+      });
+    } catch (_) {}
+  }
+
+  function newSession() {
+    if (state.provisional) {
+      toast('当前已在新会话中');
+      $('#composer')?.focus();
+      return;
+    }
+    closeSheet();
+    stopPolling();
+    stopFollow();
+    state.provisional = true;
+    state.session = { id: '', title: '新会话', isProvisional: true };
+    state.blocks = [];
+    state.blockKeys = new Set();
+    state.turns = [];
+    state.interjections = [];
+    state.draft = '';
+    state.error = '';
+    clearAttachments();
+    renderAppbar();
+    renderContent();
+    renderDock();
+    toast('已进入新会话');
+    setTimeout(() => { $('#composer')?.focus(); }, 150);
+  }
+
+
+  let railFadeTimer = null;
+  function showTurnRailBriefly(ms = 1200) {
+    const rail = $('#turn-rail');
+    if (!rail || rail.hidden) return;
+    rail.classList.add('visible');
+    clearTimeout(railFadeTimer);
+    railFadeTimer = setTimeout(() => {
+      rail.classList.remove('visible');
+    }, ms);
+  }
+  function hideTurnRailSoon(delay = 500) {
+    clearTimeout(railFadeTimer);
+    railFadeTimer = setTimeout(() => {
+      $('#turn-rail')?.classList.remove('visible');
+      const tip = $('#turn-tooltip');
+      if (tip) tip.hidden = true;
+    }, delay);
+  }
+
+  let tooltipTimer = null;
+  function showTurnTooltip(idx, targetEl) {
+    const tip = $('#turn-tooltip');
+    const turn = state.turns?.[idx];
+    if (!tip || !turn) return;
+    clearTimeout(tooltipTimer);
+    tip.textContent = `第 ${turn.index + 1} 轮 · ${turn.text}`;
+    tip.hidden = false;
+    const rect = targetEl.getBoundingClientRect();
+    const railRect = $('#turn-rail')?.getBoundingClientRect();
+    if (railRect) {
+      tip.style.top = `${rect.top - railRect.top - 6}px`;
+    }
+    tooltipTimer = setTimeout(() => { tip.hidden = true; }, 1800);
+  }
+
+  function updateRailArrows() {
+    const rail = $('#turn-rail');
+    if (!rail) return;
+    const track = rail.querySelector('.turn-rail-track');
+    const up = rail.querySelector('.turn-rail-arrow.up');
+    const down = rail.querySelector('.turn-rail-arrow.down');
+    if (!track || !up || !down) return;
+    const canScroll = track.scrollHeight > track.clientHeight + 4;
+    if (!canScroll) {
+      up.hidden = true;
+      down.hidden = true;
+      return;
+    }
+    up.hidden = track.scrollTop <= 4;
+    down.hidden = track.scrollTop + track.clientHeight >= track.scrollHeight - 4;
+  }
+
+  function renderTurnRail() {
+    let rail = $('#turn-rail');
+    const turns = state.turns || [];
+    if (turns.length <= 1 || state.provisional || !state.session?.id) {
+      if (rail) rail.hidden = true;
+      return;
+    }
+    if (!rail) {
+      rail = document.createElement('div');
+      rail.id = 'turn-rail';
+      rail.className = 'turn-rail';
+      $('#screen')?.appendChild(rail);
+    }
+    rail.hidden = false;
+    rail.innerHTML = `
+      <div class="turn-rail-inner">
+        <button type="button" class="turn-rail-arrow up" data-act="rail-scroll-up" aria-label="向上查看更多轮次" hidden>
+          <svg viewBox="0 0 14 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 4.5L7 1.5L12.5 4.5"/></svg>
+        </button>
+        <div class="turn-rail-track" id="turn-rail-track">
+          ${turns.map((t) => `<button class="turn-dash" data-act="jump-turn" data-turn-idx="${t.index}" aria-label="第 ${t.index + 1} 轮：${esc(t.text)}"><span class="turn-dash-bar"></span></button>`).join('')}
+        </div>
+        <button type="button" class="turn-rail-arrow down" data-act="rail-scroll-down" aria-label="向下查看更多轮次" hidden>
+          <svg viewBox="0 0 14 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5L7 4.5L12.5 1.5"/></svg>
+        </button>
+      </div>
+      <div class="turn-tooltip" id="turn-tooltip" hidden></div>
+    `;
+    const track = rail.querySelector('.turn-rail-track');
+    if (track) {
+      track.addEventListener('scroll', () => {
+        showTurnRailBriefly(1500);
+        updateRailArrows();
+      }, { passive: true });
+    }
+    updateActiveTurnDash();
+    updateRailArrows();
+    showTurnRailBriefly(1400);
+  }
+
+  function updateActiveTurnDash() {
+    const el = $('#content');
+    if (!el || !state.turns?.length) return;
+    const viewTop = el.scrollTop + 60;
+    const dashes = document.querySelectorAll('.turn-dash');
+    if (!dashes.length) return;
+    let activeIdx = 0;
+    for (let i = 0; i < state.turns.length; i++) {
+      const node = document.getElementById(`turn-${i}`);
+      if (node && node.offsetTop <= viewTop) {
+        activeIdx = i;
+      }
+    }
+    let activeDash = null;
+    dashes.forEach((dash) => {
+      const idx = Number(dash.dataset.turnIdx);
+      const isActive = idx === activeIdx;
+      dash.classList.toggle('active', isActive);
+      if (isActive) activeDash = dash;
+    });
+    const track = $('#turn-rail-track');
+    if (track && activeDash && track.scrollHeight > track.clientHeight) {
+      const dashTop = activeDash.offsetTop;
+      const dashBottom = dashTop + activeDash.offsetHeight;
+      if (dashTop < track.scrollTop + 16) {
+        track.scrollTop = Math.max(0, dashTop - 16);
+      } else if (dashBottom > track.scrollTop + track.clientHeight - 16) {
+        track.scrollTop = dashBottom - track.clientHeight + 16;
+      }
+    }
+    updateRailArrows();
+  }
+
+  // 轮次跳转：只滚动 #content 容器，绝不使用 scrollIntoView。
+  // scrollIntoView 在 Android WebView / PWA 中会连带把整个页面（含 appbar、dock、
+  // visualViewport）一起滚上去，表现为「界面被抬太高」：顶栏消失、消息贴到状态栏、
+  // 底部露出大片空白。这里用 getBoundingClientRect 精确换算到 #content.scrollTop，
+  // 并顺手把可能被旧逻辑滚歪的 window/document 滚动位置复位。
+  function scrollToTurn(idx, behavior = 'smooth') {
+    const content = $('#content');
+    const target = document.getElementById(`turn-${idx}`);
+    if (!content || !target) return;
+    const cRect = content.getBoundingClientRect();
+    const tRect = target.getBoundingClientRect();
+    const top = Math.max(0, content.scrollTop + (tRect.top - cRect.top) - 12);
+    if (typeof content.scrollTo === 'function') {
+      try { content.scrollTo({ top, behavior }); }
+      catch (_) { content.scrollTop = top; }
+    } else {
+      content.scrollTop = top;
+    }
+    try { if (window.scrollY) window.scrollTo(0, 0); } catch (_) {}
+    try { if (document.scrollingElement) document.scrollingElement.scrollTop = 0; } catch (_) {}
+    try { if (document.body) document.body.scrollTop = 0; } catch (_) {}
+  }
+
+  function updateScrollBottomBtn() {
+    const el = $('#content');
+    const btn = $('#scroll-bottom-btn');
+    if (!btn || !el) return;
+    const isUp = el.scrollHeight - el.scrollTop - el.clientHeight > 350;
+    btn.hidden = !(isUp && state.session && (state.blocks?.length || 0) > 4 && !state.provisional);
+  }
+
+  function turnOutlineSheet() {
+    if (!state.turns?.length) {
+      toast('当前会话暂无轮次');
+      return;
+    }
+    const rows = state.turns.slice().reverse().map((t) => `<div class="lrow tap" data-act="jump-turn-from-sheet" data-turn-idx="${t.index}">
+      <span class="ico-badge blue" style="font-weight:800;font-size:12px">${t.index + 1}</span>
+      <div class="l-main">
+        <div class="l-title">${esc(t.text)}</div>
+        <div class="l-sub">第 ${t.index + 1} 轮提问 · 点击直达</div>
+      </div>
+    </div>`).join('');
+    openSheet({
+      kind: 'turn-outline',
+      title: '会话轮次目录',
+      sub: `共 ${state.turns.length} 轮问答 · 点击快速跳转`,
+      tall: true,
+      body: `<div class="list">${rows}</div>`,
+    });
+  }
+
+  /* ---------- appbar ---------- */
+  function renderAppbar() {
+    const s = state.session;
+    const st = status();
+    // 副标题只显示当前模型名（如 tiered），不再拼「空闲 · 」；状态改由右侧指示灯表达。
+    const modelLabel = state.model ? state.model.split('/').pop() : 'DSH';
+    const stateLabel = st.label.split(' · ')[1] || '未连接';
+    $('#appbar').innerHTML = `
+      <div class="abtitle-wrap">
+        <div class="abtitle" data-act="sessions">${s ? esc(s.title) : '新会话'}</div>
+        <div class="absub">${esc(modelLabel)}</div>
+      </div>
+      <div class="abactions">
+        <span class="conn-dot ${esc(st.dot || '')}" title="会话状态：${esc(stateLabel)}"></span>
+        <button class="abtn" data-act="settings" aria-label="设置">${icon('gear')}</button>
+      </div>
+    `;
+  }
+
+  /* ---------- content ---------- */
+  function toolImagesHtml(images) {
+    if (!Array.isArray(images) || !images.length) return '';
+    return `<div class="tool-images">${images.map((img) => {
+      let src = '';
+      if (img?.attachmentId) {
+        src = `${API}/attachment?id=${encodeURIComponent(img.attachmentId)}`;
+      } else if (img?.data) {
+        src = `data:${img.mediaType || 'image/png'};base64,${img.data}`;
+      } else if (img?.src || img?.preview || img?.url) {
+        src = img.src || img.preview || img.url;
+      }
+      if (!src) return '';
+      const label = [img.name, img.width && img.height ? `${img.width}×${img.height}` : ''].filter(Boolean).join(' · ');
+      return `<button type="button" class="tool-image" data-act="view-image" data-src="${esc(src)}" data-label="${esc(label || '图片')}"><img src="${esc(src)}" alt="${esc(img.name || 'image')}" loading="lazy"><span>${esc(label)}</span></button>`;
+    }).join('')}</div>`;
+  }
+
+  function userFilesHtml(files) {
+    if (!Array.isArray(files) || !files.length) return '';
+    return `<div class="user-files">${files.map((file) => {
+      if (!file) return '';
+      const src = file.attachmentId
+        ? `${API}/file-attachment?id=${encodeURIComponent(file.attachmentId)}&name=${encodeURIComponent(file.name || 'file')}`
+        : '';
+      const size = (file.bytes || file.size) ? `${((file.bytes || file.size) / 1024).toFixed(0)} KB` : '';
+      const tag = src ? 'a' : 'div';
+      const href = src ? ` href="${esc(src)}" download="${esc(file.name || 'file')}"` : '';
+      return `<${tag} class="user-file"${href}><span class="user-file-ico">${icon('file')}</span><span class="user-file-main"><b>${esc(file.name || 'file')}</b>${size ? `<span>${esc(size)}</span>` : ''}</span></${tag}>`;
+    }).join('')}</div>`;
+  }
+
+  function userImagesHtml(images) {
+    if (!Array.isArray(images) || !images.length) return '';
+    return `<div class="user-images">${images.map((img) => {
+      let src = '';
+      if (img?.attachmentId) {
+        src = `${API}/attachment?id=${encodeURIComponent(img.attachmentId)}`;
+      } else if (img?.data) {
+        src = `data:${img.mediaType || 'image/png'};base64,${img.data}`;
+      } else if (img?.src || img?.preview || img?.url) {
+        src = img.src || img.preview || img.url;
+      }
+      if (!src) return '';
+      const label = [img.name, img.width && img.height ? `${img.width}×${img.height}` : ''].filter(Boolean).join(' · ');
+      return `<button type="button" class="user-image" data-act="view-image" data-src="${esc(src)}" data-label="${esc(label || '图片')}"><img src="${esc(src)}" alt="${esc(img.name || 'image')}" loading="lazy"></button>`;
+    }).join('')}</div>`;
+  }
+
+
+  function isIgnoredSystemPrompt(text) {
+    if (!text) return true;
+    const s = String(text).trim();
+    if (s.startsWith('Time sampled while preparing turn') || s.includes('Browser time zone for this request:')) return true;
+    if (s.startsWith('<system-reminder>') || s.includes('</system-reminder>')) return true;
+    if (s.startsWith('The following workspace instructions may be relevant') || s.includes('Instructions from: AGENTS.md')) return true;
+    return false;
+  }
+
+  // 前端 Markdown 表格渲染引擎：
+  // 1. 历史会话或早期烘焙的快照中，表格常以 <p>| 标题 |...<br>|---|...<br>...</p> 形式持久化；
+  // 2. 本函数在前端将管道符表格实时解析为带 .table-wrap 的原生表格，
+  // 保证无论新会话还是任何历史旧会话，均能即时呈现出圆角卡片、表头浅底与隔行微底色的精美表格。
+  function renderMarkdownTables(html) {
+    if (!html || typeof html !== 'string') return '';
+    if (html.includes('class="table-wrap"')) return html;
+
+    const isDelim = (s) => {
+      const clean = s.trim().replace(/^\|/, '').replace(/\|$/, '');
+      if (!clean) return false;
+      const parts = clean.split('|');
+      return parts.length >= 1 && parts.every((p) => /^\s*:?-{2,}:?\s*$/.test(p));
+    };
+    const isRow = (s) => s.includes('|') && s.trim().length > 0;
+    const splitCells = (row) => {
+      const safe = row.trim().replace(/^\|/, '').replace(/\|$/, '');
+      return safe.split(/(?<!\\)\|/).map((c) => c.trim().replace(/\\\|/g, '|'));
+    };
+
+    const convertLines = (lines) => {
+      const out = [];
+      let i = 0;
+      while (i < lines.length) {
+        if (isRow(lines[i]) && i + 1 < lines.length && isDelim(lines[i + 1])) {
+          const headerRow = splitCells(lines[i]);
+          const delimRow = splitCells(lines[i + 1]);
+          if (headerRow.length === delimRow.length) {
+            const aligns = delimRow.map((c) => {
+              const left = c.startsWith(':');
+              const right = c.endsWith(':');
+              if (left && right) return 'center';
+              if (right) return 'right';
+              return 'left';
+            });
+
+            let tableHtml = '<div class="table-wrap"><table><thead><tr>';
+            headerRow.forEach((col, j) => {
+              const a = aligns[j] !== 'left' ? ` style="text-align:${aligns[j]}"` : '';
+              tableHtml += `<th${a}>${col}</th>`;
+            });
+            tableHtml += '</tr></thead><tbody>';
+
+            i += 2;
+            while (i < lines.length && isRow(lines[i]) && !isDelim(lines[i])) {
+              const cells = splitCells(lines[i]);
+              tableHtml += '<tr>';
+              headerRow.forEach((_, j) => {
+                const val = cells[j] ?? '';
+                const a = aligns[j] !== 'left' ? ` style="text-align:${aligns[j]}"` : '';
+                tableHtml += `<td${a}>${val}</td>`;
+              });
+              tableHtml += '</tr>';
+              i++;
+            }
+            tableHtml += '</tbody></table></div>';
+            out.push(tableHtml);
+            continue;
+          }
+        }
+        out.push(lines[i]);
+        i++;
+      }
+      return out;
+    };
+
+    if (/<p>/i.test(html)) {
+      return html.replace(/<p>([\s\S]*?)<\/p>/gi, (match, pInner) => {
+        if (!pInner.includes('|')) return match;
+        const lines = pInner.split(/<br\s*\/?>|\n/gi);
+        const out = convertLines(lines);
+        const resultParts = [];
+        let currentParagraph = [];
+        for (const item of out) {
+          if (item.startsWith('<div class="table-wrap">')) {
+            if (currentParagraph.length) {
+              const text = currentParagraph.join('<br>').trim();
+              if (text) resultParts.push(`<p>${text}</p>`);
+              currentParagraph = [];
+            }
+            resultParts.push(item);
+          } else {
+            currentParagraph.push(item);
+          }
+        }
+        if (currentParagraph.length) {
+          const text = currentParagraph.join('<br>').trim();
+          if (text) resultParts.push(`<p>${text}</p>`);
+        }
+        return resultParts.join('');
+      });
+    }
+
+    const lines = html.split('\n');
+    return convertLines(lines).join('\n');
+  }
+
+  function unescapeMathEntities(s) {
+    return String(s || '')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'");
+  }
+
+  // 严格的行内数学公式判定：必须含 LaTeX 命令（反斜杠），或是无空格、无中文、非纯数字的 ASCII 数学表达式。
+  // 避免散文中落单的 $ 与后文另一个 $ 被错误配对（例如「$50 美元，另有 $...」），
+  // 也避免把金额符号 $50 / $100.50 吞进公式。
+  function isLikelyMathExpr(raw) {
+    const t = String(raw || '').trim();
+    if (!t || /[<>]/.test(t)) return false;
+    if (t.includes('\\')) return true;
+    if (/\s/.test(t)) return false;
+    if (/^[\d.,]+$/.test(t)) return false;
+    if (/[\u3400-\u9fff]/.test(t)) return false;
+    return /^[\x20-\x7e]+$/.test(t);
+  }
+
+  function renderMarkdownMath(html) {
+    if (!html || typeof html !== 'string') return '';
+    const k = typeof katex !== 'undefined' && katex.renderToString ? katex : (typeof window !== 'undefined' && window.katex?.renderToString ? window.katex : null);
+    if (!k) return html;
+
+    const renderBlock = (raw) => {
+      const clean = unescapeMathEntities(raw).trim();
+      // 块级公式绝不能跨越 HTML 标签；过长的也不当作公式，防止误吞整段正文。
+      if (!clean || clean.length > 2000 || /<[a-z]/i.test(clean)) return null;
+      try {
+        return `<div class="math-block">${k.renderToString(clean, { displayMode: true, throwOnError: false, strict: 'ignore' })}</div>`;
+      } catch {
+        return null;
+      }
+    };
+
+    // 1. 去除单纯包裹公式块的 <p>
+    let res = html.replace(/<p>\s*(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\])\s*<\/p>/gi, '$1');
+
+    // 2. 块级公式：$$ ... $$ 与 \[ ... \]
+    res = res.replace(/\$\$([\s\S]*?)\$\$/g, (_match, tex) => renderBlock(tex) ?? _match);
+    res = res.replace(/\\\[([\s\S]*?)\\\]/g, (_match, tex) => renderBlock(tex) ?? _match);
+
+    // 3. 行内公式：$ ... $ 与 \( ... \)
+    // 先把「$ + 数字/金额」等落单货币符号用占位符保护，防止它跨过中文与后面的真公式错误配对。
+    const currency = [];
+    res = res.replace(/(^|[^\\])\$(\d[\d.,]*)(?=\s|[\u3400-\u9fff]|[，。、；：！？)）]|$)/g, (_m, prefix, num) => {
+      const token = `\uE000MVCCUR${currency.length}\uE001`;
+      currency.push(`$${num}`);
+      return `${prefix}${token}`;
+    });
+
+    res = res.replace(/(^|[^\\])\$([^\$\n]+?)\$/g, (_match, prefix, tex) => {
+      if (!isLikelyMathExpr(tex)) return _match;
+      try {
+        const clean = unescapeMathEntities(tex).trim();
+        const rendered = k.renderToString(clean, { displayMode: false, throwOnError: false, strict: 'ignore' });
+        return `${prefix}<span class="math-inline">${rendered}</span>`;
+      } catch {
+        return _match;
+      }
+    });
+
+    res = res.replace(/\uE000MVCCUR(\d+)\uE001/g, (_m, i) => currency[Number(i)] ?? '');
+
+    res = res.replace(/\\\(([\s\S]*?)\\\)/g, (_match, tex) => {
+      const clean = unescapeMathEntities(tex).trim();
+      if (!clean || clean.length > 1000 || /<[a-z]/i.test(clean)) return _match;
+      try {
+        const rendered = k.renderToString(clean, { displayMode: false, throwOnError: false, strict: 'ignore' });
+        return `<span class="math-inline">${rendered}</span>`;
+      } catch {
+        return _match;
+      }
+    });
+
+    return res;
+  }
+
+  // 用私有区占位符把 <pre>/<code> 代码块整体隔离，表格与公式引擎都绝不能改写代码块内容。
+  // 否则会把 <div class="math-block"> 注入 <pre><code>，破坏 HTML 结构，
+  // 导致后续 <details> 卡片失去自定义 <summary>，浏览器退化成一排默认「详情」（9771.jpg 回归）。
+  function protectCodeBlocks(html) {
+    const store = [];
+    const out = html.replace(/<(pre|code)\b[^>]*>[\s\S]*?<\/\1>/gi, (m) => {
+      const token = `\uE000MVCCODE${store.length}\uE001`;
+      store.push(m);
+      return token;
+    });
+    return {
+      out,
+      restore: (s) => s.replace(/\uE000MVCCODE(\d+)\uE001/g, (_m, i) => store[Number(i)] ?? ''),
+    };
+  }
+
+  function renderFormattedContent(html) {
+    if (!html || typeof html !== 'string') return '';
+    const { out, restore } = protectCodeBlocks(html);
+    let res = renderMarkdownTables(out);
+    res = renderMarkdownMath(res);
+    return restore(res);
+  }
+
+  function chatBlock(b) {
+    switch (b.type) {
+      case 'user':
+        const tid = b._turnId ? ` id="${b._turnId}" data-turn="${b._turnIndex}"` : '';
+        return `<div class="row user"${tid}${b._optimistic ? ` data-optimistic="${esc(b._rpcId || '')}"` : ''}><div class="bubble-user">${userImagesHtml(b.images)}${userFilesHtml(b.files)}${b.text ? `<div class="user-text">${esc(b.text)}</div>` : ''}${b.source === 'steering' ? '<div class="user-tag">插话</div>' : ''}${b._optimistic ? `<div class="user-state">${b._busy ? '插话 · 排队中（未进入上下文）' : '发送中'}</div>` : ''}</div></div>`;
+      case 'assistant':
+        return `<div class="row"><div class="card-md">${renderFormattedContent(b.html || esc(b.text || ''))}</div></div>`;
+      case 'thinking': {
+        const chars = b.chars || (b.text || '').length;
+        return `<div class="row"><details class="thinking"><summary><span class="think-ico">${icon('brain')}</span><span class="think-label">深度思考</span><span class="think-chars">${chars} 字</span><span class="think-caret">${icon('chevron')}</span></summary><div class="think-body">${renderFormattedContent(b.html || esc(b.text || ''))}</div></details></div>`;
+      }
+      case 'tool': {
+        const running = b.status === '运行中';
+        const statusClass = running ? 'running' : b.status === '失败' ? 'error' : '';
+        return `<div class="row"><details class="tool-card" data-call-id="${esc(b._callId || '')}">
+          <summary class="tool-head"><span class="tool-ico">${icon(b.name === 'read' ? 'file' : 'terminal')}</span><span class="tool-name">${esc(b.name)}</span><span class="tool-arg">${esc(b.arg || '')}</span>${b.durationMs ? `<span class="tool-time">${durationLabel(b.durationMs)}</span>` : ''}<span class="tool-status ${statusClass}">${esc(b.status || '')}</span><span class="tool-caret">${icon('chevron')}</span></summary>
+          <div class="tool-content">${toolImagesHtml(b.images)}<pre class="tool-body">${esc(b.body || '')}</pre></div>
+        </details></div>`;
+      }
+      case 'error': {
+        const quota = b.code === 'QUOTA' || b.code === 'ACCOUNT_QUOTA' || b.status === 402 || /额度|余额|insufficient|balance|quota/i.test(`${b.title || ''} ${b.message || ''}`);
+        return `<div class="row"><div class="error-card${quota ? ' quota' : ''}">
+          <div class="error-head"><span class="error-ico">!</span><div class="error-main"><div class="error-title">${esc(b.title || '模型调用失败')}</div><div class="error-meta">${esc(b.code || 'ERROR')}${b.status ? ` · HTTP ${esc(b.status)}` : ''}</div></div></div>
+          ${b.message ? `<div class="error-body">${esc(b.message)}</div>` : ''}
+          <div class="error-actions">${quota
+            ? `<button class="btn primary wide" data-act="top-up">去官方充值</button><button class="btn ghost wide" data-act="open-dsh">在 DSH 中处理</button>`
+            : `<button class="btn primary wide" data-act="open-dsh">在 DSH 中处理</button>`}</div>
+        </div></div>`;
+      }
+      case 'compaction':
+        return `<div class="row"><div class="compaction">${icon('cut')} ${esc(b.text)}</div></div>`;
+      case 'system':
+        if (isIgnoredSystemPrompt(b.body || b.text)) return '';
+        return `<div class="row"><div class="card-compact"><span class="ico-badge ${b.tone || ''}">${icon(b.icon || 'check')}</span><div class="c-main"><div class="c-title">${esc(b.title || '')}</div><div class="c-body">${b.html || esc(b.body || '')}</div></div></div></div>`;
+      default:
+        return '';
+    }
+  }
+
+  function approvalCard(a) {
+    const id = esc(a.id || '');
+    const disabled = a.id ? '' : ' disabled';
+    return `<div class="row"><div class="action-card">
+      <div class="action-head"><span class="action-ico">${icon('shield')}</span><div><div class="action-title">待授权 <span class="chip amber">MobileVC</span></div><div class="action-desc">${esc(a.tool || '工具')} · ${esc(a.reason || '')}</div></div></div>
+      <div class="action-actions">
+        <button class="btn ghost wide" data-act="approval" data-id="${id}" data-outcome="rejected"${disabled}>拒绝</button>
+        <button class="btn primary wide" data-act="approval" data-id="${id}" data-outcome="allowed-once"${disabled}>允许一次</button>
+      </div>
+      <div class="note">直接在这里审批。如果另一端已经处理，这次点击会自动失效。</div>
+    </div></div>`;
+  }
+
+  function questionCard(entry) {
+    const id = esc(entry.callId || '');
+    const first = entry.questions?.[0] || {};
+    const summary = first.header || first.question || 'DSH 正在等待你的回答';
+    const count = entry.questions?.length || 1;
+    return `<div class="row"><div class="action-card question-card">
+      <div class="action-head"><span class="action-ico">${icon('chat')}</span><div><div class="action-title">需要你回答 <span class="chip blue">DSH</span></div><div class="action-desc">${esc(summary)}${count > 1 ? ` · 共 ${count} 个问题` : ''}</div></div></div>
+      <div class="action-actions"><button class="btn primary wide" data-act="answer-question" data-callid="${id}">回答问题</button></div>
+      <div class="note">回答会直接回到当前会话，不需要切回 DSH。</div>
+    </div></div>`;
+  }
+
+  function questionField(question, index, total) {
+    const options = Array.isArray(question.options) ? question.options : [];
+    const type = question.multiSelect ? 'checkbox' : 'radio';
+    const optionHtml = options.map((option) => `<label class="q-option">
+      <input type="${type}" name="q_${index}" value="${esc(option.label)}">
+      <span class="q-opt-main"><span class="q-opt-label">${esc(option.label)}</span>${option.description ? `<span class="q-opt-desc">${esc(option.description)}</span>` : ''}</span>
+    </label>`).join('');
+    return `<div class="q-block" data-qidx="${index}">
+      <div class="q-kicker">问题 ${index + 1} / ${total}${question.multiSelect ? ' · 可多选' : ''}</div>
+      <div class="q-title">${esc(question.question)}</div>
+      ${question.detail ? `<div class="q-detail">${esc(question.detail)}</div>` : ''}
+      ${optionHtml ? `<div class="q-options">${optionHtml}</div>` : ''}
+      <textarea class="q-custom" data-qcustom="${index}" placeholder="${options.length ? '也可以补充或直接输入回答…' : '输入你的回答…'}"></textarea>
+    </div>`;
+  }
+
+  function questionSheet(callId) {
+    const entry = state.questions.find((item) => item.callId === callId) || state.questions[0];
+    if (!entry) { toast('这个问题已失效，正在同步…'); void refreshQuestions({ silent: true }); return; }
+    const fields = entry.questions.map((question, index) => questionField(question, index, entry.questions.length)).join('');
+    openSheet({
+      title: '回答 DSH 的问题',
+      sub: '提交后会回到当前会话',
+      tall: true,
+      body: `<div class="question-form" id="question-form">${fields}
+        <button class="btn primary wide" data-act="answer-submit" data-callid="${esc(entry.callId)}">提交回答</button>
+        <div class="note">选择选项，或者直接输入回答。提交后 DSH 会继续执行。</div>
+      </div>`,
+    });
+  }
+
+  async function submitQuestionAnswer(callId, button) {
+    const entry = state.questions.find((item) => item.callId === callId);
+    if (!entry) { toast('这个问题已失效'); void refreshQuestions({ silent: true }); return; }
+    const root = $('#question-form');
+    if (!root) return;
+    const answers = [];
+    for (let index = 0; index < entry.questions.length; index += 1) {
+      const block = root.querySelector(`[data-qidx="${index}"]`);
+      const selected = block ? [...block.querySelectorAll('input:checked')].map((input) => input.value) : [];
+      const custom = block?.querySelector(`[data-qcustom="${index}"]`)?.value?.trim() || '';
+      if (!selected.length && !custom) {
+        toast(`请回答第 ${index + 1} 个问题`);
+        block?.querySelector('textarea')?.focus();
+        return;
+      }
+      answers.push({ id: entry.questions[index].id, selected, ...(custom ? { custom } : {}) });
+    }
+    if (button) button.disabled = true;
+    try {
+      const r = await fetch(`${API}/questions/answer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-MobileVC': '1' },
+        body: JSON.stringify({ sessionId: state.session?.id, callId, answers }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data?.error || `${r.status} ${r.statusText}`);
+      if (data.stale) {
+        toast('这个问题已由另一端的回答处理，正在同步…');
+        closeSheet();
+        void refreshQuestions({ silent: true });
+        void syncCurrentSession(true);
+        return;
+      }
+      state.questions = state.questions.filter((item) => item.callId !== callId);
+      state.questionSig = '';
+      updateQuestionSlot();
+      renderDock();
+      closeSheet();
+      toast('已回答 · DSH 继续执行');
+    } catch (e) {
+      if (button) button.disabled = false;
+      toast(`回答失败：${e.message}`);
+    }
+  }
+
+  async function refreshQuestions(opts = {}) {
+    if (!INTERACTIVE || !state.session?.id || state.detailLoading) return;
+    const sid = state.session.id;
+    try {
+      const data = await api(`questions?session=${encodeURIComponent(sid)}`);
+      if (state.session?.id !== sid) return;
+      const next = Array.isArray(data.questions) ? data.questions : [];
+      const sig = JSON.stringify(next.map((entry) => [entry.callId, entry.questions]));
+      if (sig === state.questionSig) return;
+      const previous = state.questions.length;
+      state.questions = next;
+      state.questionSig = sig;
+      updateQuestionSlot();
+      renderDock();
+      if (!previous && next.length) toast('DSH 需要你回答一个问题');
+      if (!next.length && document.querySelector('#sheet-root .sheet-head h2')?.textContent?.startsWith('回答 DSH 的问题')) closeSheet();
+    } catch (_) {
+      /* the next poll or follow snapshot retries */
+    }
+  }
+
+  function renderContent() {
+    const el = $('#content');
+    if (state.loading) {
+      el.className = 'content landing-mode';
+      el.innerHTML = `<div class="landing">
+        <img class="logo" src="assets/logo-transparent.png" alt="MobileVC">
+        <div class="wordmark">MobileVC</div>
+        <div class="tagline">正在读取 DSH 会话…</div>
+        <div class="boot-spinner" aria-label="loading"></div>
+      </div>`;
+      return;
+    }
+    if (state.error) {
+      el.className = 'content landing-mode';
+      el.innerHTML = `<div class="landing"><img class="logo" src="assets/logo-transparent.png" alt="MobileVC"><div class="wordmark">MobileVC</div>
+        <div class="error-box">${esc(state.error)}</div>
+        <button class="btn primary" data-act="reload">重新连接 DSH</button>
+        <div class="tagline" style="margin-top:10px">如果一直失败，请先打开 <a href="/dsh/" target="_blank">DSH</a> 确认登录状态。</div>
+      </div>`;
+      return;
+    }
+    if (state.detailLoading) {
+      el.className = 'content';
+      el.innerHTML = `<div class="timeline"><div class="row"><div class="card-md"><span class="typing"><i></i><i></i><i></i></span></div></div></div>`;
+      return;
+    }
+    if (state.provisional || !state.session?.id) {
+      el.className = 'content landing-mode';
+      el.innerHTML = `<div class="landing">
+        <div style="width:60px;height:60px;border-radius:18px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;margin:0 auto 16px">${icon('chat')}</div>
+        <div class="wordmark" style="font-size:20px;font-weight:800">新会话</div>
+        <div class="tagline">输入消息并发送，即可开启全新对话。</div>
+      </div>`;
+      const rail = $('#turn-rail');
+      if (rail) rail.hidden = true;
+      const bottomBtn = $('#scroll-bottom-btn');
+      if (bottomBtn) bottomBtn.hidden = true;
+      return;
+    }
+    el.className = 'content';
+    let currentTurn = 0;
+    const turns = [];
+    const blocks = state.blocks.map((b) => {
+      if (b.type === 'user') {
+        const text = (b.text || '').trim() || (b.images?.length ? '【图片】' : (b.files?.length ? '【文件】' : '提问'));
+        b._turnIndex = currentTurn;
+        b._turnId = `turn-${currentTurn}`;
+        turns.push({
+          index: currentTurn,
+          id: `turn-${currentTurn}`,
+          text: text.slice(0, 60),
+          fullText: text,
+        });
+        currentTurn += 1;
+      }
+      return chatBlock(b);
+    }).join('');
+    state.turns = turns;
+    const approvals = state.approvals.map(approvalCard).join('');
+    const empty = `<div class="row"><div class="card-compact"><span class="ico-badge">${icon('chat')}</span><div class="c-main"><div class="c-title">${esc(state.session.title)}</div><div class="c-body">这个会话还没有可见消息。在 DSH 里继续对话后，这里会同步显示。</div></div></div></div>`;
+    const topIndicator = state.turns.length > 2
+      ? `<div class="history-top-indicator">${icon('check')} <span>已加载全部历史对话（共 ${state.turns.length} 轮）</span></div>`
+      : '';
+    el.innerHTML = `<div class="timeline" id="timeline">${topIndicator}${blocks || empty}<div id="live-slot"></div><div id="approval-slot">${approvals}</div><div id="question-slot"></div></div>`;
+    updateLiveSlot();
+    updateQuestionSlot();
+    renderTurnRail();
+    updateScrollBottomBtn();
+  }
+
+  /* ---------- dock ---------- */
+  function renderDock() {
+    const s = state.session;
+    $('#dock').innerHTML = `
+      <div class="dock unified-bar">
+        <button class="scroll-bottom-btn" id="scroll-bottom-btn" data-act="scroll-bottom" aria-label="回到底部" hidden>${icon('down')}<span>回到底部</span></button>
+        ${s ? '<div class="queue-banner" id="queue-banner" data-act="queue" hidden></div>' : ''}
+        ${s ? '<div class="attach-strip" id="attach-strip" hidden></div>' : ''}
+        <div class="inputbox">
+          <button class="img-btn plus-btn" data-act="attach" aria-label="功能与附件" title="功能与附件">${icon('plus')}</button>
+          <textarea id="composer" rows="1"${INTERACTIVE ? '' : ' readonly'} placeholder="${INTERACTIVE ? '输入消息，发送给 DSH…' : '在 DSH 中继续对话'}">${esc(state.draft || '')}</textarea>
+          ${INTERACTIVE ? `<button class="run-btn" data-act="cancel" aria-label="停止" title="停止" hidden>${icon('stop')}</button>` : ''}
+          <button class="send-btn${state.sending ? ' busy' : ''}" data-act="${s && INTERACTIVE ? 'send' : 'open-dsh'}" aria-label="${s && INTERACTIVE ? '发送' : '在 DSH 打开'}">${icon('up')}</button>
+        </div>
+      </div>`;
+    requestAnimationFrame(() => {
+      measureDock();
+      updateAttachStrip();
+      updateDockAction();
+      updateQueueChip();
+    });
+  }
+  function measureDock() {
+    const dock = $('.dock');
+    if (!dock) return;
+    const h = Math.ceil(dock.getBoundingClientRect().height);
+    const wrap = $('.dock-wrap');
+    const wrapPad = wrap ? (parseInt(getComputedStyle(wrap).paddingBottom, 10) || 0) : 0;
+    $('#screen').style.setProperty('--dock-space', `${h + wrapPad + 14}px`);
+  }
+
+  function render() {
+    renderAppbar();
+    renderContent();
+    renderDock();
+    document.documentElement.dataset.theme = state.theme;
+    document.title = state.session ? `${state.session.title} · MobileVC` : 'MobileVC';
+  }
+
+  /* ---------- sheets ---------- */
+  let sheetTimer = null;
+  function openSheet({ kind = '', title, sub = '', body, tall = false }) {
+    const root = $('#sheet-root');
+    clearTimeout(sheetTimer);
+    root.innerHTML = `<div class="sheet-backdrop" data-act="close-sheet"></div>
+      <div class="sheet" data-kind="${esc(kind || '')}"${tall ? ' style="max-height:92%"' : ''}>
+        <div class="sheet-handle"></div>
+        <div class="sheet-head"><h2>${title}${sub ? `<div class="sub">${sub}</div>` : ''}</h2><button class="sheet-close" data-act="close-sheet" aria-label="关闭">${icon('x')}</button></div>
+        <div class="sheet-body">${body}</div>
+      </div>`;
+    root.classList.add('open');
+  }
+  function activeSheetKind() {
+    const root = $('#sheet-root');
+    if (!root || !root.classList.contains('open')) return '';
+    return root.querySelector('.sheet')?.dataset.kind || '';
+  }
+  function isSheetKind(kind) {
+    return activeSheetKind() === kind;
+  }
+  function setSheetBody(html) {
+    const body = $('#sheet-root .sheet-body');
+    if (body) body.innerHTML = html;
+  }
+  function closeSheet() {
+    const root = $('#sheet-root');
+    root.classList.remove('open');
+    sheetTimer = setTimeout(() => { root.innerHTML = ''; }, 260);
+  }
+  function toast(msg) {
+    const root = $('#toast-root');
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.textContent = msg;
+    root.appendChild(el);
+    setTimeout(() => { el.style.opacity = '0'; }, 1900);
+    setTimeout(() => el.remove(), 2150);
+  }
+
+  function isMeaningfulSession(s) {
+    if (!s) return false;
+    if (s.subagent) return false;
+    if (s.id === state.session?.id) return true;
+    if (s.state === 'running') return true;
+    const u = Number(s.userCount ?? 0);
+    const a = Number(s.assistantCount ?? 0);
+    const b = Number(s.blockCount ?? 0);
+    const hasContent = u > 0 || a > 0 || b > 0 || Boolean(s.last && s.last.trim());
+    return hasContent;
+  }
+
+  function sessionsBody() {
+    const valid = (state.sessions || []).filter(isMeaningfulSession);
+    const q = (state.sessionsQuery || '').trim().toLowerCase();
+    const filtered = q
+      ? valid.filter((s) => (s.title || '').toLowerCase().includes(q) || (s.cwd || '').toLowerCase().includes(q) || (s.last || '').toLowerCase().includes(q))
+      : valid;
+
+    const rows = filtered.map((s) => `<div class="lrow tap sess-row ${s.id === state.session?.id ? 'selected' : ''}" data-act="select-session" data-id="${esc(s.id)}">
+      <span class="ico-badge ${s.state === 'running' ? 'green' : s.state === 'waiting' ? 'red' : 'gray'}">${icon(s.state === 'running' ? 'play' : 'chat')}</span>
+      <div class="l-main"><div class="l-title">${esc(s.title)} ${s.id === state.session?.id ? '<span class="chip blue">当前</span>' : ''}</div>
+      <div class="l-sub">${esc(s.cwd || '')} · ${esc(s.last || '')}</div>
+      <div class="l-meta">${esc(s.engine)} · ${esc(s.model)} · ${esc(s.time)}</div></div>
+      <span class="chip ${s.state === 'running' ? 'green' : s.state === 'waiting' ? 'amber' : ''}">${esc(s.stateLabel)}</span>
+    </div>`).join('');
+
+    const searchBox = `<div class="session-search-wrap">
+      <input type="text" class="search-input" id="session-search-input" placeholder="搜索会话标题、目录或内容…" value="${esc(state.sessionsQuery || '')}">
+      ${state.sessionsQuery ? '<button class="search-clear-btn" data-act="clear-session-search">✕</button>' : ''}
+    </div>`;
+
+    const totalCount = state.sessionsTotal || valid.length;
+    const loadMoreBtn = state.sessionsHasMore && !q
+      ? `<button class="btn ghost wide" style="margin-top:12px;margin-bottom:8px" data-act="load-more-sessions" id="load-more-sessions-btn">
+          ${state.sessionsLoading ? '正在加载…' : `加载更多历史会话（已载入 ${valid.length} / 共 ${totalCount} 个）`}
+        </button>`
+      : `<div class="note" style="text-align:center;margin-top:12px">已显示全部 ${filtered.length} 个历史会话</div>`;
+
+    return `<button class="btn primary wide" style="margin-bottom:10px" data-act="new-session">${icon('plus')} 新建会话</button>
+      ${searchBox}
+      <div class="list" id="sessions-list-wrap">${rows || '<div class="note">没有匹配的会话。</div>'}</div>
+      ${loadMoreBtn}
+      <div class="note" style="margin-top:8px">数据来自真实 DSH；下滑可自动载入更多更早的历史会话。</div>`;
+  }
+
+  function setupSessionScrollObserver() {
+    const btn = $('#load-more-sessions-btn');
+    const scrollContainer = $('#sheet-root .sheet-body');
+    if (!btn || !scrollContainer) return;
+    if (typeof IntersectionObserver !== 'undefined') {
+      const observer = new IntersectionObserver((entries) => {
+        if (entries[0]?.isIntersecting) {
+          observer.disconnect();
+          loadMoreSessions();
+        }
+      }, { root: scrollContainer, threshold: 0.1 });
+      observer.observe(btn);
+    }
+  }
+
+  async function loadMoreSessions() {
+    if (state.sessionsLoading || !state.sessionsHasMore) return;
+    state.sessionsLoading = true;
+    const btn = $('#load-more-sessions-btn');
+    if (btn) btn.innerHTML = '正在加载…';
+    try {
+      const data = await api(`sessions?offset=${state.sessionsOffset || state.sessions.length}&limit=20`);
+      const newItems = data.sessions || [];
+      const existingIds = new Set(state.sessions.map((s) => s.id));
+      for (const item of newItems) {
+        if (!existingIds.has(item.id)) state.sessions.push(item);
+      }
+      state.sessionsTotal = data.total || state.sessions.length;
+      state.sessionsHasMore = Boolean(data.hasMore);
+      state.sessionsOffset = (state.sessionsOffset || 0) + newItems.length;
+    } catch (_) {
+    } finally {
+      state.sessionsLoading = false;
+      if (isSheetKind('sessions')) {
+        setSheetBody(sessionsBody());
+        setupSessionScrollObserver();
+      }
+    }
+  }
+
+  async function sessionsSheet() {
+    state.sessionsOffset = 0;
+    state.sessionsHasMore = true;
+    state.sessionsQuery = '';
+    state.sessionsLoading = false;
+    openSheet({
+      kind: 'sessions',
+      title: '会话',
+      sub: '全部 DSH 历史会话',
+      tall: true,
+      body: sessionsBody(),
+    });
+    try {
+      const data = await api('sessions?offset=0&limit=20');
+      state.sessions = mergeCurrentSessionIntoList(data.sessions || []);
+      state.sessionsTotal = Math.max(state.sessions.length, data.total || 0);
+      state.sessionsHasMore = Boolean(data.hasMore);
+      state.sessionsOffset = (data.sessions || []).length;
+      if (isSheetKind('sessions')) {
+        setSheetBody(sessionsBody());
+        setupSessionScrollObserver();
+      }
+    } catch (_) {
+      /* keep cached */
+    }
+  }
+  async function skillsSheet() {
+    openSheet({ title: 'Skills', sub: '真实目录 · 由 DSH 管理', body: `<div class="note">正在读取 ${esc(state.cwd || 'DSH')} 的 skill 目录…</div>` });
+    try {
+      const data = await api(`skills?cwd=${encodeURIComponent(state.cwd || '')}`);
+      state.skills = data.skills || [];
+      const rows = state.skills.map((s) => `<div class="lrow">
+        <span class="ico-badge">${icon('puzzle')}</span>
+        <div class="l-main"><div class="l-title">${esc(s.name)} <span class="chip">${esc(s.src)}</span></div><div class="l-sub">${esc(s.desc)}</div><div class="l-meta">${esc(s.path)}</div></div>
+        <span class="chip">只读</span>
+      </div>`).join('');
+      setSheetBody(`<div class="list">${rows || '<div class="note">没有找到 SKILL.md。</div>'}</div>
+        <div class="note">手机端只读展示；启用/禁用和调用由 DSH 的 skill 工具管理。</div>`);
+    } catch (e) {
+      setSheetBody(`<div class="note">读取 skills 失败：${esc(e.message)}</div>`);
+    }
+  }
+
+  async function memorySheet() {
+    openSheet({ title: 'Memory', sub: '真实 AGENTS.md / CLAUDE.md', body: `<div class="note">正在读取…</div>` });
+    try {
+      const data = await api(`memory?cwd=${encodeURIComponent(state.cwd || '')}`);
+      state.memories = data.items || [];
+      state.memoryDefaultPath = data.defaultPath || '';
+      const rows = state.memories.map((m) => `<div class="mem-card">
+        <div class="mem-title">${esc(m.title)} <span class="chip green">${esc(m.path)}</span></div>
+        <div class="mem-body">${esc(m.body.slice(0, 400))}${m.body.length > 400 ? '…' : ''}</div>
+        <div class="mem-foot"><span>${esc(m.updated)}</span><button class="mem-edit" data-act="edit-memory" data-id="${esc(m.id)}">编辑</button></div>
+      </div>`).join('');
+      setSheetBody(`${rows || '<div class="note">没有找到 AGENTS.md / CLAUDE.md。你可以在项目里创建一个，然后回来刷新。</div>'}
+        <button class="btn primary wide" data-act="create-memory">${icon('plus')} 新建 AGENTS.md</button>
+        <div class="note">保存会直接写入真实文件；DSH 下一次会话加载。</div>`);
+    } catch (e) {
+      setSheetBody(`<div class="note">读取 memory 失败：${esc(e.message)}</div>`);
+    }
+  }
+
+  function memoryEditor(id) {
+    const m = state.memories.find((x) => x.id === id) || { title: 'AGENTS.md', body: '', path: state.memoryDefaultPath || '' };
+    openSheet({
+      title: m.title,
+      sub: '写入真实文件',
+      body: `<div class="field"><label>内容</label><textarea id="mem-body" style="min-height:220px">${esc(m.body)}</textarea></div>
+        <div class="note">路径：${esc(m.path)}</div>
+        <div class="action-actions"><button class="btn ghost wide" data-act="memory-list">返回</button><button class="btn primary wide" data-act="save-memory" data-path="${esc(m.path)}">保存</button></div>`,
+    });
+  }
+
+  async function saveMemory(path) {
+    const content = $('#mem-body')?.value || '';
+    try {
+      const r = await fetch(`${API}/memory`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-MobileVC': '1' },
+        body: JSON.stringify({ path, content }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || r.statusText);
+      closeSheet();
+      toast('已写入真实文件');
+      memorySheet();
+    } catch (e) {
+      toast(`保存失败：${e.message}`);
+    }
+  }
+
+
+  const TOOL_LABELS = {
+    bash: '执行命令', shell: '执行命令', exec: '执行命令', terminal: '执行命令',
+    read: '读取文件', read_image: '查看图片', write: '写入文件', edit: '编辑文件',
+    apply_patch: '修改文件', grep: '搜索内容', glob: '查找文件',
+    web_search: '搜索网页', web_fetch: '读取网页', task: '子任务',
+    todo_write: '更新任务', question: '询问确认', skill: '调用技能',
+  }
+  function toolLabel(name) {
+    const key = String(name || '').toLowerCase()
+    if (TOOL_LABELS[key]) return TOOL_LABELS[key]
+    if (key.includes('image')) return '图片工具'
+    if (key.includes('file')) return '文件工具'
+    if (key.includes('search')) return '搜索工具'
+    return '其他工具'
+  }
+
+  function plainHtml(html) {
+    const div = document.createElement('div');
+    div.innerHTML = html || '';
+    return (div.textContent || '').replace(/\s+/g, ' ').trim();
+  }
+
+  function traceUserRow(block) {
+    return `<div class="trace-row"><span class="trace-dot user"></span><div class="trace-main"><div class="trace-title">${block.source === 'steering' ? '插话' : '用户'}</div><div class="trace-sub">${esc((block.text || '').slice(0, 200))}</div></div></div>`
+  }
+
+  function traceAssistantRow(block) {
+    return `<div class="trace-row"><span class="trace-dot assistant"></span><div class="trace-main"><div class="trace-title">回复</div><div class="trace-sub">${esc(plainHtml(block.html).slice(0, 240))}</div></div></div>`
+  }
+
+  function traceThinkingGroup(group) {
+    const chars = group.reduce((sum, b) => sum + (b.chars || (b.text || '').length), 0)
+    return `<details class="trace-row trace-group"><summary><span class="trace-dot think"></span><div class="trace-main"><div class="trace-title">模型思考 <span class="chip">${group.length} 段 · ${chars} 字</span></div><div class="trace-sub">内容默认折叠 · 点开查看原文</div></div></summary><div class="trace-body trace-raw">${group.map((b) => b.html || esc(b.text || '')).join('<hr>')}</div></details>`
+  }
+
+  function traceToolGroup(group) {
+    const labels = [...new Set(group.map((b) => toolLabel(b.name)))]
+    return `<details class="trace-row trace-group"><summary><span class="trace-dot tool"></span><div class="trace-main"><div class="trace-title">工具链 <span class="chip">${group.length} 个</span></div><div class="trace-sub">${esc(labels.join(' · '))}</div></div></summary><div class="trace-body"><div class="trace-tool-list">${group.map((b) => `<div class="trace-tool-line"><b>${esc(toolLabel(b.name))}</b><span>${b.durationMs ? durationLabel(b.durationMs) : ''}<span class="chip ${b.status === '运行中' ? 'amber' : b.status === '失败' ? 'red' : 'green'}">${esc(b.status || '')}</span></span></div>`).join('')}</div><div class="trace-note">工具参数和执行输出在「完整」模式里查看。</div></div></details>`
+  }
+
+  function traceFullRow(block) {
+    if (block.type === 'user') return traceUserRow(block)
+    if (block.type === 'thinking') {
+      return `<details class="trace-row"><summary><span class="trace-dot think"></span><div class="trace-main"><div class="trace-title">模型思考 <span class="chip">${block.chars || 0} 字</span></div><div class="trace-sub">点开查看原文（可能是英文）</div></div></summary><div class="trace-body trace-raw">${block.html || esc(block.text || '')}</div></details>`
+    }
+    if (block.type === 'tool') {
+      return `<div class="trace-row"><span class="trace-dot tool"></span><div class="trace-main"><div class="trace-title">${esc(toolLabel(block.name))} ${block.durationMs ? `<span class="chip">${durationLabel(block.durationMs)}</span>` : ''} <span class="chip ${block.status === '运行中' ? 'amber' : 'green'}">${esc(block.status || '')}</span></div><div class="trace-sub"><code>${esc(block.name)}</code> ${esc(block.arg || '')}</div></div></div>`
+    }
+    if (block.type === 'assistant') return traceAssistantRow(block)
+    if (block.type === 'error') return `<div class="trace-row"><span class="trace-dot error"></span><div class="trace-main"><div class="trace-title">${esc(block.title || '模型调用失败')} <span class="chip red">${esc(block.code || 'ERROR')}</span></div><div class="trace-sub">${esc((block.message || '').slice(0, 180))}</div></div></div>`
+    if (block.type === 'compaction') return `<div class="trace-row"><span class="trace-dot compaction"></span><div class="trace-main"><div class="trace-title">上下文压缩</div><div class="trace-sub">${esc(block.text || '')}</div></div></div>`
+    if (block.type === 'system') return `<div class="trace-row"><span class="trace-dot system"></span><div class="trace-main"><div class="trace-title">${esc(block.title || '系统消息')} <span class="chip">系统注入</span></div><div class="trace-sub">${esc((block.body || '').slice(0, 240))}</div></div></div>`
+    return ''
+  }
+
+  function traceRows() {
+    if (state.traceMode === 'full') return state.blocks.map(traceFullRow).join('')
+    const rows = []
+    let i = 0
+    while (i < state.blocks.length) {
+      const block = state.blocks[i]
+      if (block.type === 'thinking') {
+        const group = []
+        while (i < state.blocks.length && state.blocks[i].type === 'thinking') group.push(state.blocks[i++])
+        rows.push(traceThinkingGroup(group))
+        continue
+      }
+      if (block.type === 'tool') {
+        const group = []
+        while (i < state.blocks.length && state.blocks[i].type === 'tool') group.push(state.blocks[i++])
+        rows.push(traceToolGroup(group))
+        continue
+      }
+      rows.push(traceFullRow(block))
+      i += 1
+    }
+    return rows.join('')
+  }
+
+  function traceSheet() {
+    const rows = traceRows()
+    const live = state.live && (state.live.reasoning || state.live.text)
+      ? `<div class="trace-row"><span class="trace-dot live"></span><div class="trace-main"><div class="trace-title">正在执行</div><div class="trace-sub">${state.live.reasoning ? '思考中…' : ''}${state.live.text ? ' 输出中…' : ''}</div></div></div>`
+      : ''
+    const simple = state.traceMode !== 'full'
+    openSheet({
+      title: '执行迹',
+      sub: simple ? '简洁模式 · 隐藏英文原文与工具参数' : '完整模式 · 显示原文与参数',
+      tall: true,
+      body: `<div class="trace-mode" role="group" aria-label="迹显示模式">
+        <button class="${simple ? 'active' : ''}" data-act="trace-mode" data-mode="simple">简洁</button>
+        <button class="${!simple ? 'active' : ''}" data-act="trace-mode" data-mode="full">完整</button>
+      </div>
+      <div class="trace-list">${rows || '<div class="note">还没有 trace。发一条消息试试。</div>'}${live}</div>
+      <div class="action-actions"><button class="btn ghost wide" data-act="logs">原始日志</button><button class="btn primary wide" data-act="refresh">刷新</button></div>`,
+    })
+  }
+
+  async function pluginsSheet() {
+    openSheet({ title: '插件', sub: 'DSH plugin manager · 实时生效', body: '<div class="note">正在读取插件…</div>' });
+    try {
+      const data = await api('plugins');
+      const bundles = (data.bundles || []).map((b) => `<div class="lrow">
+        <span class="ico-badge">${icon('puzzle')}</span>
+        <div class="l-main"><div class="l-title">${esc(b.label || b.name)} ${b.version ? `<span class="chip">${esc(b.version)}</span>` : ''}</div>
+        <div class="l-sub">${esc(b.description || b.name)}</div>
+        <div class="l-meta">${b.optional ? '内置可选' : b.installed ? '已安装' : '安装提供'}${b.readOnlyReason ? ' · 只读' : ''}</div></div>
+        <button class="switch ${b.enabled ? 'on' : ''}" data-act="toggle-plugin" data-kind="bundle" data-id="${esc(b.name)}" data-enabled="${b.enabled ? '0' : '1'}" ${b.readOnlyReason ? 'disabled' : ''}></button>
+      </div>`).join('');
+      const plugins = (data.plugins || []).map((p) => {
+        const self = p.id === 'mobilevc' || /mobilevc-dsh/.test(p.moduleName || '');
+        return `<div class="lrow">
+          <span class="ico-badge ${p.enabled ? 'green' : 'gray'}">${icon('cpu')}</span>
+          <div class="l-main"><div class="l-title">${esc(p.label || p.moduleName)} ${self ? '<span class="chip blue">当前</span>' : ''}</div>
+          <div class="l-sub" style="font-family:var(--mono);font-size:10px">${esc(p.moduleName)}</div>
+          <div class="l-meta">${esc(p.fiberPhase || '')}${p.readOnlyReason ? ' · ' + esc(p.readOnlyReason) : ''}</div></div>
+          ${self ? '<span class="chip green">运行中</span>' : `<button class="switch ${p.enabled ? 'on' : ''}" data-act="toggle-plugin" data-kind="plugin" data-id="${esc(p.id)}" data-enabled="${p.enabled ? '0' : '1'}" ${p.readOnlyReason ? 'disabled' : ''}></button>`}
+        </div>`;
+      }).join('');
+      setSheetBody(`<div class="list"><div class="sheet-section">插件包</div>${bundles || '<div class="note">没有插件包。</div>'}<div class="sheet-section">运行中的插件</div>${plugins}</div>
+        <div class="note">开关直接走 DSH plugin manager；部分变更需要重启。当前页面自身的插件被锁定，避免把自己关掉。</div>`);
+    } catch (e) {
+      setSheetBody(`<div class="note">读取插件失败：${esc(e.message)}</div>`);
+    }
+  }
+
+  async function togglePlugin(kind, id, enabled) {
+    try {
+      const r = await fetch(`${API}/plugins/toggle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-MobileVC': '1' },
+        body: JSON.stringify({ kind, id, enabled }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data?.error || `${r.status} ${r.statusText}`);
+      toast(data.application === 'restart-required' ? '已保存，需要重启 DSH' : enabled ? '已启用' : '已停用');
+      pluginsSheet();
+    } catch (e) {
+      toast(`插件操作失败：${e.message}`);
+    }
+  }
+
+  async function logsSheet() {
+    openSheet({ title: '运行日志', sub: '真实 DSH 日志文件', tall: true, body: `<div class="note">正在读取…</div>` });
+    try {
+      const data = await api('logs');
+      state.logs = data;
+      const lines = (data.lines || []).map((l) => `<div class="logline ${esc(l.level)}"><span class="lt">${esc(l.t)}</span><span class="lm">${esc(l.m)}</span></div>`).join('');
+      setSheetBody(`<div class="logbox"><div class="log-head"><span class="live"></span> ${esc(data.file || 'DSH log')} <span class="spacer"></span> ${(data.lines || []).length} 行</div><div class="log-list">${lines || '<div class="note">暂无日志。</div>'}</div></div>
+        <button class="btn wide" data-act="logs">刷新</button>
+        <div class="note">日志在电脑上产生，手机只读；不会上传。</div>`);
+    } catch (e) {
+      setSheetBody(`<div class="note">读取日志失败：${esc(e.message)}</div>`);
+    }
+  }
+
+  function approvalsSheet() {
+    const cards = state.approvals.map((a) => approvalCard(a)).join('');
+    openSheet({
+      title: '待处理授权',
+      sub: '来自真实 DSH 会话 · 可直接审批',
+      body: `${cards || '<div class="note">当前没有待处理授权。</div>'}<div class="note">如果另一端已经处理，这次点击会自动失效；列表会重新同步。</div>`,
+    });
+  }
+
+  function modelsSheet() {
+    openSheet({
+      title: '模型',
+      sub: '当前会话正在使用的真实配置',
+      body: `<div class="list"><div class="lrow"><span class="ico-badge">${icon('cpu')}</span><div class="l-main"><div class="l-title">${esc(state.model || '未记录')}</div><div class="l-sub">provider: ${esc(state.engine)}</div></div><span class="chip green">当前</span></div></div>
+        <div class="note">模型切换在 DSH 的模型选择器里完成；手机端只展示会话记录中的配置。</div>`,
+    });
+  }
+
+  function statusSheet() {
+    const s = state.session;
+    openSheet({
+      title: '状态',
+      sub: '真实 DSH 会话',
+      body: `<div class="list">
+        <div class="lrow"><span class="ico-badge green">${icon('server')}</span><div class="l-main"><div class="l-title">DSH 已连接</div><div class="l-sub">通过 ${esc(location.host)} 的登录门读取会话文件</div></div></div>
+        <div class="lrow"><span class="ico-badge">${icon('chat')}</span><div class="l-main"><div class="l-title">${esc(s?.title || '未选择会话')}</div><div class="l-sub">${esc(s?.cwd || '—')}</div></div></div>
+        <div class="lrow"><span class="ico-badge">${icon('cpu')}</span><div class="l-main"><div class="l-title">${esc(state.engine)} · ${esc(state.model || '—')}</div><div class="l-sub">${esc(s?.stateLabel || '—')} · ${esc(s?.time || '')}</div></div></div>
+        <div class="lrow"><span class="ico-badge gray">${icon('file')}</span><div class="l-main"><div class="l-title">Session ID</div><div class="l-sub" style="font-family:var(--mono)">${esc(s?.id || '—')}</div></div></div>
+      </div>
+      <button class="btn wide" data-act="refresh">刷新数据</button>
+      <button class="btn primary wide" data-act="open-dsh">在 DSH 中打开</button>`,
+    });
+  }
+
+  function settingsSheet() {
+    const s = state.session;
+    const st = status();
+    openSheet({
+      kind: 'settings',
+      title: '设置',
+      sub: '状态 · 刷新 · 外观与连接',
+      body: `<div class="list">
+        <div class="lrow">
+          <span class="ico-badge green">${icon('dashboard')}</span>
+          <div class="l-main">
+            <div class="l-title">DSH 运行状态</div>
+            <div class="l-sub">${esc(location.host)} · ${st.label}</div>
+          </div>
+          <button class="btn ghost" data-act="status">详情</button>
+        </div>
+        <div class="lrow">
+          <span class="ico-badge">${icon('refresh')}</span>
+          <div class="l-main">
+            <div class="l-title">刷新会话</div>
+            <div class="l-sub">重新同步最新消息与运行状态</div>
+          </div>
+          <button class="btn ghost" data-act="settings-refresh">刷新</button>
+        </div>
+        <div class="lrow" style="flex-direction:column;align-items:stretch;gap:8px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="ico-badge">${icon(state.theme === 'dark' ? 'moon' : 'sun')}</span>
+            <div class="l-main">
+              <div class="l-title">外观模式</div>
+              <div class="l-sub">当前：${state.themeMode === 'auto' ? '跟随系统' : state.themeMode === 'dark' ? '深色模式' : '白色浅色'}</div>
+            </div>
+          </div>
+          <div class="theme-segmented">
+            <button class="theme-seg-btn ${state.themeMode === 'light' ? 'active' : ''}" data-act="set-theme" data-mode="light">${icon('sun')}<span>白色浅色</span></button>
+            <button class="theme-seg-btn ${state.themeMode === 'dark' ? 'active' : ''}" data-act="set-theme" data-mode="dark">${icon('moon')}<span>深色模式</span></button>
+            <button class="theme-seg-btn ${state.themeMode === 'auto' ? 'active' : ''}" data-act="set-theme" data-mode="auto">${icon('device')}<span>跟随系统</span></button>
+          </div>
+        </div>
+        <div class="lrow">
+          <span class="ico-badge">${icon('outline')}</span>
+          <div class="l-main">
+            <div class="l-title">会话轮次目录</div>
+            <div class="l-sub">查看全部 ${state.turns?.length || 0} 轮提问并快速跳转</div>
+          </div>
+          <button class="btn ghost" data-act="turn-outline">目录</button>
+        </div>
+        <div class="lrow">
+          <span class="ico-badge">${icon('plus')}</span>
+          <div class="l-main">
+            <div class="l-title">iOS 全屏</div>
+            <div class="l-sub">Safari 分享 → 添加到主屏幕；从主屏幕启动无地址栏</div>
+          </div>
+        </div>
+        <div class="lrow">
+          <span class="ico-badge">${icon('bell')}</span>
+          <div class="l-main">
+            <div class="l-title">通知提醒</div>
+            <div class="l-sub">任务完成 / 失败 / 审批 Web Push</div>
+          </div>
+          <button class="btn ghost" data-act="enable-push">开启</button>
+        </div>
+        <div class="lrow">
+          <span class="ico-badge gray">${icon('lock')}</span>
+          <div class="l-main">
+            <div class="l-title">${INTERACTIVE ? '已接入 DSH 运行时' : '只读预览'}</div>
+            <div class="l-sub">${INTERACTIVE ? '发送走 sessionController；审批仍在 DSH' : '只读查看'}</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn primary full" style="margin-top:14px" data-act="open-dsh">在桌面版 DSH 中打开</button>
+      <div class="note" style="margin-top:10px">数据直接来自本机 ~/.dsh/sessions，无 mock。</div>`,
+    });
+  }
+  /* ---------- files ---------- */
+  function ensureFileDrawer() {
+    const root = $('#drawer-root');
+    if ($('#file-body', root)) return;
+    root.innerHTML = `<div class="drawer-backdrop" data-act="close-drawer"></div><aside class="drawer">
+      <div class="drawer-head"><h2>文件</h2><button class="sheet-close" data-act="close-drawer" aria-label="关闭">${icon('x')}</button></div>
+      <div class="path-bar" id="file-path-bar"></div>
+      <div class="file-body" id="file-body"></div>
+    </aside>`;
+  }
+
+  function filePathMarkup() {
+    const baseName = (state.cwd || '/').split('/').filter(Boolean).pop() || '/';
+    let acc = '';
+    let crumbs = `<button class="crumb" data-act="file-crumb" data-path="">${esc(baseName)}</button>`;
+    for (const part of (state.filePath ? state.filePath.split('/') : [])) {
+      acc = acc ? `${acc}/${part}` : part;
+      crumbs += `<span class="crumb-sep">/</span><button class="crumb" data-act="file-crumb" data-path="${esc(acc)}">${esc(part)}</button>`;
+    }
+    return `${state.filePath ? `<button class="path-up" data-act="file-up" aria-label="上一级">${icon('chevron')}</button>` : ''}<div class="crumbs">${crumbs}</div>`;
+  }
+
+  function renderFileDrawer() {
+    const root = $('#drawer-root');
+    if (!root.classList.contains('open')) return;
+    ensureFileDrawer();
+    const bar = $('#file-path-bar', root);
+    const body = $('#file-body', root);
+    if (bar) bar.innerHTML = filePathMarkup();
+    if (!body) return;
+    const rows = state.files.map((f) => `<div class="frow" data-act="${f.type === 'dir' ? 'open-dir' : 'open-file'}" data-name="${esc(f.name)}" data-type="${esc(f.type)}" data-path="${esc(f.path || f.name)}">
+      <span class="fico ${f.type === 'dir' ? 'dir' : f.type === 'img' ? 'img' : ''}">${icon(f.type === 'dir' ? 'folder' : f.type === 'img' ? 'image' : 'file')}</span>
+      <div class="l-main"><div class="fname">${esc(f.name)}</div><div class="fmeta">${esc(f.meta)}</div></div>
+      ${f.type === 'dir' ? `<span class="fchevron">${icon('chevron')}</span>` : ''}
+    </div>`).join('');
+    body.innerHTML = state.fileLoading
+      ? '<div class="note">正在读取…</div>'
+      : `<div class="list" style="border:0;background:transparent">${rows || '<div class="note">目录为空。</div>'}</div>`;
+  }
+
+
+  function filesSheetContent() {
+    const bar = `<div class="path-bar" id="file-path-bar">${filePathMarkup()}</div>`;
+    const rows = state.files.map((f) => `<div class="frow" data-act="${f.type === 'dir' ? 'open-dir' : 'open-file'}" data-name="${esc(f.name)}" data-type="${esc(f.type)}" data-path="${esc(f.path || f.name)}">
+      <span class="fico ${f.type === 'dir' ? 'dir' : f.type === 'img' ? 'img' : ''}">${icon(f.type === 'dir' ? 'folder' : f.type === 'img' ? 'image' : 'file')}</span>
+      <div class="l-main"><div class="fname">${esc(f.name)}</div><div class="fmeta">${esc(f.meta || f.size || '')}</div></div>
+      ${f.type === 'dir' ? `<span class="fchevron">${icon('chevron')}</span>` : ''}
+    </div>`).join('');
+    const list = state.fileLoading
+      ? '<div class="note">正在读取…</div>'
+      : `<div class="list" style="border:0;background:transparent">${rows || '<div class="note">目录为空。</div>'}</div>`;
+    return `${bar}<div class="file-body" id="file-body">${list}</div>`;
+  }
+
+  function updateFilesSheet() {
+    const bar = $('#file-path-bar');
+    if (bar) bar.innerHTML = filePathMarkup();
+    const body = $('#file-body');
+    if (body) {
+      const rows = state.files.map((f) => `<div class="frow" data-act="${f.type === 'dir' ? 'open-dir' : 'open-file'}" data-name="${esc(f.name)}" data-type="${esc(f.type)}" data-path="${esc(f.path || f.name)}">
+        <span class="fico ${f.type === 'dir' ? 'dir' : f.type === 'img' ? 'img' : ''}">${icon(f.type === 'dir' ? 'folder' : f.type === 'img' ? 'image' : 'file')}</span>
+        <div class="l-main"><div class="fname">${esc(f.name)}</div><div class="fmeta">${esc(f.meta || f.size || '')}</div></div>
+        ${f.type === 'dir' ? `<span class="fchevron">${icon('chevron')}</span>` : ''}
+      </div>`).join('');
+      body.innerHTML = state.fileLoading
+        ? '<div class="note">正在读取…</div>'
+        : `<div class="list" style="border:0;background:transparent">${rows || '<div class="note">目录为空。</div>'}</div>`;
+    }
+  }
+
+  async function openFilesSheet() {
+    state.files = [];
+    state.filePath = '';
+    state.fileParent = '';
+    state.fileLoading = true;
+    openSheet({
+      title: '工作区文件',
+      sub: esc(state.cwd || '当前工作区'),
+      tall: true,
+      body: filesSheetContent(),
+    });
+    await loadFiles('', { initial: true });
+  }
+
+  async function loadFiles(path, opts = {}) {
+    const seq = ++state.fileSeq;
+    const initial = Boolean(opts.initial);
+    const sid = state.session?.id || '';
+    if (initial) {
+      state.fileLoading = true;
+      renderFileDrawer();
+      updateFilesSheet();
+    } else {
+      $('#file-body')?.classList.add('loading');
+    }
+    try {
+      const data = await api(`files?session=${encodeURIComponent(sid)}&path=${encodeURIComponent(path || '')}`);
+      if (seq !== state.fileSeq) return;
+      state.files = data.items || [];
+      state.cwd = data.cwd || state.cwd;
+      state.filePath = data.path || '';
+      state.fileParent = data.parent || '';
+    } catch (e) {
+      if (seq !== state.fileSeq) return;
+      state.files = [];
+      toast(`读取文件失败：${e.message}`);
+    } finally {
+      if (seq !== state.fileSeq) return;
+      state.fileLoading = false;
+      const body = $('#file-body');
+      if (body) body.classList.remove('loading');
+      renderFileDrawer();
+      updateFilesSheet();
+    }
+  }
+
+  async function openDrawer() {
+    if (!state.session) {
+      toast('先选择一个会话');
+      return;
+    }
+    const root = $('#drawer-root');
+    state.files = [];
+    state.filePath = '';
+    state.fileParent = '';
+    root.classList.add('open');
+    ensureFileDrawer();
+    state.fileLoading = true;
+    renderFileDrawer();
+    await loadFiles('', { initial: true });
+  }
+
+  function closeDrawer() {
+    state.fileSeq += 1;
+    const root = $('#drawer-root');
+    root.classList.remove('open');
+    setTimeout(() => { root.innerHTML = ''; }, 260);
+  }
+
+  async function openFile(name, type, path = name) {
+    if (type === 'dir') { loadFiles(path); return; }
+    if (type === 'img') {
+      const src = `${API}/file?session=${encodeURIComponent(state.session.id)}&path=${encodeURIComponent(path)}`;
+      openSheet({ title: name, sub: '真实工作区图片', body: `<img class="viewer-img-el" src="${src}" alt="${esc(name)}">` });
+      return;
+    }
+    try {
+      const data = await api(`file?session=${encodeURIComponent(state.session.id)}&path=${encodeURIComponent(path)}`);
+      openSheet({ title: name, sub: '真实工作区文件 · 只读', tall: true, body: `<pre class="file-pre">${esc(data.text || '')}</pre>` });
+    } catch (e) {
+      toast(`读取文件失败：${e.message}`);
+    }
+  }
+
+  /* ---------- actions ---------- */
+  document.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-act]');
+    if (!t) return;
+    const act = t.dataset.act;
+    if (act === 'sessions') { sessionsSheet(); return; }
+    if (act === 'select-session') { closeSheet(); selectSession(t.dataset.id); return; }
+    if (act === 'plugins') { pluginsSheet(); return; }
+    if (act === 'memory') { memorySheet(); return; }
+    if (act === 'memory-list') { memorySheet(); return; }
+    if (act === 'edit-memory') { memoryEditor(t.dataset.id); return; }
+    if (act === 'create-memory') { memoryEditor(''); return; }
+    if (act === 'save-memory') { saveMemory(t.dataset.path); return; }
+    if (act === 'logs') { logsSheet(); return; }
+    if (act === 'trace') { traceSheet(); return; }
+    if (act === 'trace-mode') {
+      state.traceMode = t.dataset.mode === 'full' ? 'full' : 'simple';
+      try { localStorage.setItem('mobilevc.traceMode', state.traceMode); } catch (_) {}
+      traceSheet();
+      return;
+    }
+    if (act === 'toggle-plugin') { togglePlugin(t.dataset.kind, t.dataset.id, t.dataset.enabled === '1'); return; }
+    if (act === 'approvals') { approvalsSheet(); return; }
+    if (act === 'questions') { questionSheet(state.questions[0]?.callId); return; }
+    if (act === 'answer-question') { questionSheet(t.dataset.callid || state.questions[0]?.callId); return; }
+    if (act === 'answer-submit') { submitQuestionAnswer(t.dataset.callid || '', t); return; }
+    if (act === 'models') { modelsSheet(); return; }
+    if (act === 'status') { statusSheet(); return; }
+    if (act === 'settings') { settingsSheet(); return; }
+    if (act === 'queue') { queueSheet(); return; }
+    if (act === 'queue-edit') { editQueue(t.dataset.id || ''); return; }
+    if (act === 'queue-remove') { queueAction(t.dataset.id || '', 'remove'); return; }
+    if (act === 'queue-steer') { queueAction(t.dataset.id || '', 'steer'); return; }
+    if (act === 'queue-save') { queueAction(t.dataset.id || '', 'edit', $('#queue-edit')?.value || ''); return; }
+    if (act === 'interjection-steer') { sendInterjection(t.dataset.id || '', 'steer'); return; }
+    if (act === 'interjection-queue') { sendInterjection(t.dataset.id || '', 'queue'); return; }
+    if (act === 'interjection-remove') { removeInterjection(t.dataset.id || ''); return; }
+    if (act === 'jobs') { jobsSheet(); return; }
+    if (act === 'job-kill') { killJob(t.dataset.id || ''); return; }
+    if (act === 'job-output') { jobOutput(t.dataset.id || ''); return; }
+    if (act === 'account') { accountSheet(); return; }
+    if (act === 'top-up') { openTopUp(); return; }
+    if (act === 'account-refresh') { refreshAccount(); return; }
+    if (act === 'account-usage') { window.open(state.account?.links?.usageUrl || USAGE_FALLBACK, '_blank', 'noopener'); return; }
+    if (act === 'enable-push') { enablePush(); return; }
+    if (act === 'test-push') { testPush(); return; }
+    if (act === 'refresh') { refreshSession({ forceFollow: true }); return; }
+    if (act === 'send') { sendMessage(); return; }
+    if (act === 'cancel') { cancelRun(); return; }
+    if (act === 'reload') { loadSessions(); return; }
+    if (act === 'files') { openDrawer(); return; }
+    if (act === 'close-drawer') { closeDrawer(); return; }
+    if (act === 'open-dir') { loadFiles(t.dataset.path || ''); return; }
+    if (act === 'file-up') { loadFiles(state.fileParent || ''); return; }
+    if (act === 'file-crumb') { loadFiles(t.dataset.path || ''); return; }
+    if (act === 'open-file') { closeDrawer(); setTimeout(() => openFile(t.dataset.name, t.dataset.type, t.dataset.path), 120); return; }
+    if (act === 'approval') { decideApproval(t.dataset.id, t.dataset.outcome, t); return; }
+    if (act === 'view-image') { const src = t.dataset.src; if (src) openSheet({ title: t.dataset.label || '图片', sub: 'read_image · DSH 附件', body: `<img class="viewer-img-el" src="${esc(src)}" alt="">` }); return; }
+    if (act === 'new-session') { newSession(); return; }
+    if (act === 'settings-refresh') {
+      refreshSession({ forceFollow: true });
+      toast('已刷新会话数据');
+      closeSheet();
+      return;
+    }
+    if (act === 'set-theme') {
+      const mode = t.dataset.mode || t.closest('[data-mode]')?.dataset.mode || 'auto';
+      setThemeMode(mode);
+      return;
+    }
+    if (act === 'open-files-from-plus') { closeSheet(); setTimeout(openFilesSheet, 180); return; }
+    if (act === 'open-trace-from-plus') { closeSheet(); setTimeout(traceSheet, 180); return; }
+    if (act === 'open-plugins-from-plus') { closeSheet(); setTimeout(pluginsSheet, 180); return; }
+    if (act === 'open-memory-from-plus') { closeSheet(); setTimeout(memorySheet, 180); return; }
+    if (act === 'turn-outline') { turnOutlineSheet(); return; }
+    if (act === 'jump-turn') {
+      const idx = Number(t.dataset.turnIdx ?? 0);
+      scrollToTurn(idx);
+      showTurnTooltip(idx, t);
+      return;
+    }
+    if (act === 'rail-scroll-up') {
+      const track = $('#turn-rail-track');
+      if (track) {
+        track.scrollBy({ top: -96, behavior: 'smooth' });
+        showTurnRailBriefly(1500);
+        setTimeout(updateRailArrows, 200);
+      }
+      return;
+    }
+    if (act === 'rail-scroll-down') {
+      const track = $('#turn-rail-track');
+      if (track) {
+        track.scrollBy({ top: 96, behavior: 'smooth' });
+        showTurnRailBriefly(1500);
+        setTimeout(updateRailArrows, 200);
+      }
+      return;
+    }
+    if (act === 'jump-turn-from-sheet') {
+      const idx = Number(t.dataset.turnIdx ?? 0);
+      closeSheet();
+      setTimeout(() => scrollToTurn(idx), 180);
+      return;
+    }
+    if (act === 'scroll-bottom') { scrollContentBottom(); return; }
+    if (act === 'load-more-sessions') { loadMoreSessions(); return; }
+    if (act === 'clear-session-search') {
+      state.sessionsQuery = '';
+      setSheetBody(sessionsBody());
+      return;
+    }
+    if (act === 'attach') { attachmentSheet(); return; }
+    if (act === 'files') { openFilesSheet(); return; }
+    if (act === 'pick-camera') { $('#pick-camera-input')?.click(); return; }
+    if (act === 'pick-image') { $('#pick-image-input')?.click(); return; }
+    if (act === 'pick-file') { $('#pick-file-input')?.click(); return; }
+    if (act === 'remove-attachment') { removeAttachment(t.dataset.id); return; }
+    if (act === 'close-sheet') { closeSheet(); return; }
+    if (act === 'theme') {
+      state.theme = state.theme === 'light' ? 'dark' : 'light';
+      try { localStorage.setItem('mobilevc.theme', state.theme); } catch (_) {}
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', state.theme === 'dark' ? '#000000' : '#F6F8FC');
+      render();
+      if (isSheetKind('settings')) settingsSheet();
+      return;
+    }
+    if (act === 'open-dsh') {
+      closeSheet();
+      window.open('/dsh/', '_blank', 'noopener');
+      toast('已打开 DSH；发送和审批在那里完成');
+      return;
+    }
+  });
+
+  document.addEventListener('change', (e) => {
+    const input = e.target;
+    if (!input || input.type !== 'file') return;
+    if (input.id === 'pick-image-input') {
+      handleFiles(input.files, 'image');
+      input.value = '';
+    } else if (input.id === 'pick-file-input') {
+      handleFiles(input.files, null);
+      input.value = '';
+    }
+  });
+  document.addEventListener('input', (e) => {
+    if (e.target && e.target.id === 'composer') {
+      state.draft = e.target.value;
+      e.target.style.height = 'auto';
+      e.target.style.height = `${Math.min(120, e.target.scrollHeight)}px`;
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { closeSheet(); closeDrawer(); }
+    if (e.target && e.target.id === 'composer' && e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+  window.addEventListener('resize', measureDock);
+
+  const contentEl = $('#content');
+  if (contentEl) {
+    let scrollRaf = null;
+    contentEl.addEventListener('scroll', () => {
+      showTurnRailBriefly(1200);
+      updateScrollBottomBtn();
+      if (!scrollRaf) {
+        scrollRaf = requestAnimationFrame(() => {
+          scrollRaf = null;
+          updateActiveTurnDash();
+        });
+      }
+    }, { passive: true });
+    contentEl.addEventListener('touchstart', () => showTurnRailBriefly(1500), { passive: true });
+    contentEl.addEventListener('touchmove', () => showTurnRailBriefly(1500), { passive: true });
+    contentEl.addEventListener('touchend', () => hideTurnRailSoon(1600), { passive: true });
+  }
+
+  document.addEventListener('input', (e) => {
+    if (e.target && e.target.id === 'session-search-input') {
+      state.sessionsQuery = e.target.value;
+      const listWrap = $('#sessions-list-wrap');
+      const valid = (state.sessions || []).filter(isMeaningfulSession);
+      const q = state.sessionsQuery.trim().toLowerCase();
+      const filtered = q
+        ? valid.filter((s) => (s.title || '').toLowerCase().includes(q) || (s.cwd || '').toLowerCase().includes(q) || (s.last || '').toLowerCase().includes(q))
+        : valid;
+      const rows = filtered.map((s) => `<div class="lrow tap sess-row ${s.id === state.session?.id ? 'selected' : ''}" data-act="select-session" data-id="${esc(s.id)}">
+        <span class="ico-badge ${s.state === 'running' ? 'green' : s.state === 'waiting' ? 'red' : 'gray'}">${icon(s.state === 'running' ? 'play' : 'chat')}</span>
+        <div class="l-main"><div class="l-title">${esc(s.title)} ${s.id === state.session?.id ? '<span class="chip blue">当前</span>' : ''}</div>
+        <div class="l-sub">${esc(s.cwd || '')} · ${esc(s.last || '')}</div>
+        <div class="l-meta">${esc(s.engine)} · ${esc(s.model)} · ${esc(s.time)}</div></div>
+        <span class="chip ${s.state === 'running' ? 'green' : s.state === 'waiting' ? 'amber' : ''}">${esc(s.stateLabel)}</span>
+      </div>`).join('');
+      if (listWrap) listWrap.innerHTML = rows || '<div class="note">没有匹配的会话。</div>';
+    }
+  });
+
+  let lastKeyboardInset = 0;
+  let viewportRaf = null;
+  function syncAppViewport() {
+    if (viewportRaf) return;
+    viewportRaf = requestAnimationFrame(() => {
+      viewportRaf = null;
+      const vv = window.visualViewport;
+      const innerHeight = window.innerHeight;
+      const height = vv ? vv.height : innerHeight;
+      const top = vv ? vv.offsetTop : 0;
+      const inset = Math.max(0, Math.round(innerHeight - top - height));
+      const isKeyboardReal = inset > 120;
+      const effectiveInset = isKeyboardReal ? inset : 0;
+      const prevInset = lastKeyboardInset;
+      lastKeyboardInset = effectiveInset;
+
+      document.documentElement.style.setProperty('--kb-inset', `${effectiveInset}px`);
+      document.body.classList.toggle('keyboard-open', isKeyboardReal);
+      if (typeof measureDock === 'function') measureDock();
+
+      // 当软键盘弹起、输入框底栏向上抬起时，带动 #content 对话内容同步上移，
+      // 避免最新回答被抬高的底栏和软键盘遮挡（9767.jpg 回归修复）。
+      if (isKeyboardReal && effectiveInset > prevInset) {
+        const el = $('#content');
+        if (el) {
+          const delta = effectiveInset - prevInset;
+          if (isNearBottom(el, 320)) {
+            scrollContentBottom();
+          } else {
+            el.scrollTop += delta;
+          }
+        }
+      }
+    });
+  }
+
+  function installViewportSync() {
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', syncAppViewport);
+    }
+    window.addEventListener('resize', syncAppViewport);
+    window.addEventListener('orientationchange', () => setTimeout(syncAppViewport, 300));
+    const handleComposerFocus = () => {
+      const scrollIfNear = () => {
+        syncAppViewport();
+        const content = $('#content');
+        if (content && isNearBottom(content, 350)) scrollContentBottom();
+      };
+      setTimeout(scrollIfNear, 60);
+      setTimeout(scrollIfNear, 280);
+      setTimeout(scrollIfNear, 520);
+    };
+    document.addEventListener('focusin', (event) => {
+      const el = event.target;
+      if (el && (el.id === 'composer' || el.tagName === 'TEXTAREA' || el.tagName === 'INPUT')) {
+        handleComposerFocus();
+      }
+    });
+    document.addEventListener('click', (event) => {
+      const el = event.target;
+      if (el && el.id === 'composer') {
+        handleComposerFocus();
+      }
+    });
+    document.addEventListener('focusout', () => {
+      setTimeout(() => {
+        syncAppViewport();
+      }, 120);
+    });
+    syncAppViewport();
+  }
+  installViewportSync();
+
+  function installZoomLock() {
+    const blockGesture = (event) => event.preventDefault();
+    for (const name of ['gesturestart', 'gesturechange', 'gestureend']) {
+      document.addEventListener(name, blockGesture, { passive: false });
+    }
+    document.addEventListener('touchmove', (event) => {
+      if (event.touches && event.touches.length > 1) event.preventDefault();
+    }, { passive: false });
+    document.addEventListener('dblclick', blockGesture, { passive: false });
+  }
+  installZoomLock();
+
+  // Best-effort portrait lock. Android/PWA honors this after a gesture;
+  // iOS ignores it, so the CSS orientation gate is the visual fallback.
+  function lockPortrait() {
+    try { screen.orientation?.lock?.('portrait').catch(() => {}); } catch (_) {}
+  }
+  // Android/PWA can actually lock. iOS ignores this, so the CSS gate is the
+  // durable fallback. Retry after rotation and after the first user gesture.
+  document.addEventListener('pointerdown', lockPortrait);
+  window.addEventListener('orientationchange', () => setTimeout(lockPortrait, 120));
+  window.addEventListener('resize', () => { if (window.innerWidth > window.innerHeight) lockPortrait(); });
+  setTimeout(lockPortrait, 350);
+
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      hiddenAt = Date.now();
+      return;
+    }
+    maybeBootOnResume();
+    refreshOnResume();
+  });
+  window.addEventListener('pageshow', (event) => {
+    if (!event.persisted) return;
+    maybeBootOnResume();
+    refreshOnResume();
+  });
+  window.addEventListener('online', refreshOnResume);
+  setInterval(() => {
+    if (!document.hidden && !state.loading && !state.detailLoading) refreshSessionsOnly();
+  }, 30000);
+  // Poll only when the live stream has gone quiet. During an active stream
+  // this is a no-op; when the stream is silently dead it recovers in ~2.5s.
+  setInterval(syncCurrentSession, 2500);
+  setInterval(pingPresence, 15000);
+  setInterval(refreshQueue, 2500);
+  setInterval(refreshJobs, 2500);
+  setInterval(() => { if (!document.hidden) void refreshQuestions({ silent: true }); }, 1800);
+
+  window.addEventListener('hashchange', () => {
+    const id = (location.hash.match(/^#\/chat\/(.+)$/) || [])[1] || '';
+    if (id && id !== state.session?.id) void selectSession(id);
+  });
+  bindBootControls();
+  loadSessions().finally(() => { void refreshAccount(); });
+  if (!new URLSearchParams(location.search).has('boot=0')) {
+    setTimeout(() => playMobileBoot('launch'), 120);
+  }
+  void refreshAccount();
+  setInterval(() => { if (!document.hidden) void refreshAccount(); }, 30000);
+})();

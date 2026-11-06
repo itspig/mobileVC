@@ -1,0 +1,16 @@
+node_modules/
+.DS_Store
+*.log
+.dsh/
+coverage/
+
+__pycache__/
+*.pyc
+
+# secrets
+.env
+
+# large media binaries
+*.apk
+*.mp4
+*.gif
